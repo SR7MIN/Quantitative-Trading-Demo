@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>市场数据</title>
+</head>
+<body>
+    <h1>市场数据</h1>
+    <h2>推荐股票</h2>
+    <ul>
+        {% for stock in stocks %}
+            <li><a href="{{ url_for('market_data', stock_code=stock) }}">{{ stock }}</a></li>
+        {% endfor %}
+    </ul>
+    <h2>查询股票</h2>
+    <form action="{{ url_for('market_data') }}" method="post">
+        <input type="text" name="stock_code" required placeholder="输入股票代码，如000001.SZ">
+        <button type="submit">查询</button>
+    </form>
+    <a href="/">返回首页</a>
+</body>
+</html>
