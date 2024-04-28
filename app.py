@@ -5,6 +5,7 @@ import pandas as pd
 import os
 from flask import redirect
 import matplotlib.pyplot as plt
+import datetime
 
 app=Flask(__name__)
 # Set the secret key to some random bytes. Keep this really secret!
@@ -55,10 +56,9 @@ def save_plot(stock_data, stock_code):
 
 def get_stock_data(stock_code):
     try:
-        stock_data = ak.stock_zh_a_spot_em()  # 获取A股市场的所有实时数据
-        stock_data = stock_data[stock_data['代码'] == stock_code]
-        if stock_data.empty:
-            return "未找到股票代码对应的数据。"
+        end_date = datetime.datetime.today().strftime('%Y%m%d')  # 今天的日期
+        start_date = (datetime.datetime.today() - datetime.timedelta(days=90)).strftime('%Y%m%d')  # 一年前的日期
+        stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=end_date, adjust="qfq")
         return stock_data
     except Exception as e:
         return f"获取数据失败: {str(e)}"
