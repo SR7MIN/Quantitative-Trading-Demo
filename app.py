@@ -1,9 +1,38 @@
 import akshare as ak
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, redirect, url_for
 from markupsafe import Markup
 import pandas as pd
 import os
+from flask import redirect
 import matplotlib.pyplot as plt
+
+app=Flask(__name__)
+# Set the secret key to some random bytes. Keep this really secret!
+#app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+# @app.route('/')
+# def index():
+#     if 'username' in session:   # session 中有一个键值叫 username，说明这个 session 是登录状态
+#         return f'Logged in as {session["username"]}'
+#     return 'You are not logged in'
+
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         session['username'] = request.form['username']   # 将 username 存储在 session 中
+#         return redirect(url_for('index'))
+#     return '''
+#         <form method="post">
+#             <p><input type=text name=username>
+#             <p><input type=submit value=Login>
+#         </form>
+#     '''
+
+# @app.route('/logout')
+# def logout():
+#     # remove the username from the session if it's there
+#     session.pop('username', None)
+#     return redirect(url_for('index'))
 
 def save_plot(stock_data, stock_code):
     try:
@@ -34,13 +63,11 @@ def get_stock_data(stock_code):
     except Exception as e:
         return f"获取数据失败: {str(e)}"
 
-
-app = Flask(__name__)
-@app.route('/')
+@app.route('/home')
 def home():
     return render_template('index.html')
 
-@app.route('/market-data', methods=['GET', 'POST'])
+@app.route('/home/market-data', methods=['GET', 'POST'])
 def market_data():
     if request.method == 'POST':
         stock_code = request.form.get('stock_code')
@@ -53,7 +80,7 @@ def market_data():
     else:
         return render_template('market_data.html')
 
-@app.route('/stock/<stock_code>')
+@app.route('/home/stock/<stock_code>')
 def stock(stock_code):
     data = get_stock_data(stock_code)
     plot_status = ""
@@ -72,15 +99,15 @@ def stock(stock_code):
 
 
 
-@app.route('/trade-execution')
+@app.route('/home/trade-execution')
 def trade_execution():
     return "<h1>交易执行</h1><p>这里进行交易执行。</p>"
 
-@app.route('/historical-data')
+@app.route('/home/historical-data')
 def historical_data():
     return "<h1>历史数据</h1><p>这里显示历史数据。</p>"
 
-@app.route('/risk-management')
+@app.route('/home/risk-management')
 def risk_management():
     return "<h1>风险管理</h1><p>这里进行风险管理。</p>"
 
