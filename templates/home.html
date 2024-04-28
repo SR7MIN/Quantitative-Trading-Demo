@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
@@ -29,6 +29,50 @@
 <section>
     <h2>欢迎, {{ username }}</h2>
     <p>欢迎访问我们的量化交易平台。</p>
+</section>
+<footer>
+    <p>版权所有 © 2024</p>
+</footer>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>量化交易平台</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f4f4f8; color: #333; }
+    header, footer { background-color: #e8e8e8; padding: 20px; text-align: center; }
+    nav { float: left; width: 20%; background: #d1d1d1; padding: 20px; }
+    section { float: right; width: 75%; padding: 20px; background: #ffffff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    ul { list-style-type: none; padding: 0; }
+    li a { text-decoration: none; color: #333; font-weight: bold; display: block; padding: 8px; margin-top: 5px; background: #f1f1f1; border-radius: 5px; }
+    li a:hover { background-color: #e0e0e0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid black; padding: 8px; text-align: left; }
+    img { height: 80px; }
+    footer { font-size: 0.9em; color: #666; }
+</style>
+</head>
+<body>
+<header>
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    <h1>量化交易平台</h1>  
+</header>
+<nav>
+    <h2>导航</h2>
+    <ul>
+        <li><a href="/home/market-data">市场数据</a></li>
+        <li><a href="/home/trade-execution">交易执行</a></li>
+        <li><a href="/home/historical-data">历史数据</a></li>
+        <li><a href="/home/risk-management">风险管理</a></li>
+    </ul>
+</nav>
+<section>
+    <h2>欢迎, {{ username }}</h2>
+    <p>欢迎访问我们的量化交易平台，这里提供全面的市场数据和交易工具。</p>
 </section>
 <footer>
     <p>版权所有 © 2024</p>

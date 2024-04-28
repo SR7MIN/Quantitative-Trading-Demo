@@ -1,5 +1,5 @@
 import akshare as ak
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, flash
 from flask_mysqldb import MySQL
 from markupsafe import Markup
 import pandas as pd
@@ -47,12 +47,23 @@ def signup():
         userDetails = request.form
         username = userDetails['username']
         password = userDetails['password']
+        
         cur = mysql.connection.cursor()
+        # 检查用户名是否已存在
+        cur.execute("SELECT * FROM users WHERE username = %s", [username])
+        if cur.fetchone():
+            # 如果用户名已存在，返回错误消息
+            flash('Username already taken, please choose another one!')
+            return render_template('signup.html')
+        
+        # 如果用户名不存在，插入新用户
         cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
         mysql.connection.commit()
         cur.close()
+        
         session['username'] = username
         return redirect(url_for('home', username=username))
+    
     return render_template('signup.html')
 
 @app.route('/home/<username>')
