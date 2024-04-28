@@ -42,22 +42,25 @@ def save_plot(stock_data, stock_code):
         plt.title(f'Stock {stock_code} Closing Prices')
         plt.xlabel('Date')
         plt.ylabel('Closing Price')
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=0)
         plt.tight_layout()
-        # 保存图表为PNG
+        # 使用绝对路径来避免目录问题
+        base_dir = os.path.dirname(os.path.abspath(__file__))
         plot_filename = f'{stock_code}.png'
-        plot_path = os.path.join('static', plot_filename)
+        plot_path = os.path.join(base_dir, 'static', plot_filename)
+        
         plt.savefig(plot_path)
         plt.close()
-        return plot_path, True  # 返回文件路径和成功标志
+        print(f'Plot saved to {plot_path}')
+        return plot_filename, True 
     except Exception as e:
-        return str(e), False  # 返回错误信息和失败标志
+        return str(e), False 
 
 
 def get_stock_data(stock_code):
     try:
-        end_date = datetime.datetime.today().strftime('%Y%m%d')  # 今天的日期
-        start_date = (datetime.datetime.today() - datetime.timedelta(days=90)).strftime('%Y%m%d')  # 一年前的日期
+        end_date = datetime.datetime.today().strftime('%Y%m%d')  
+        start_date = (datetime.datetime.today() - datetime.timedelta(days=365)).strftime('%Y%m%d') 
         stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=end_date, adjust="qfq")
         return stock_data
     except Exception as e:
@@ -70,32 +73,35 @@ def home():
 @app.route('/home/market-data', methods=['GET', 'POST'])
 def market_data():
     if request.method == 'POST':
+        print("Processing POST request")
         stock_code = request.form.get('stock_code')
-        data = get_stock_data(stock_code)
-        if isinstance(data, pd.DataFrame):
-            data_html = data.to_html(classes='table table-striped', border=0)
-        else:
-            data_html = data
-        return render_template('stock_data.html', table=Markup(data_html), stock_code=stock_code)
+        # Directly redirect to the stock information page
+        return redirect(url_for('stock', stock_code=stock_code))
     else:
+        print("Processing GET request")
         return render_template('market_data.html')
 
 @app.route('/home/stock/<stock_code>')
 def stock(stock_code):
+    plot_status = ""  # Initialize plot_status to a default value
     data = get_stock_data(stock_code)
-    plot_status = ""
+    print('Processing stock data retrieval')
     if isinstance(data, pd.DataFrame):
+        print('Data retrieved successfully')
         data_html = data.to_html(classes='table table-striped', border=0)
-        plot_path, plot_success = save_plot(data, stock_code)
+        plot_filename, plot_success = save_plot(data, stock_code)
         if not plot_success:
-            plot_status = "图表生成失败: " + plot_path  # 如果失败，plot_path会是错误信息
-            plot_path = None  # 设置为None，确保不尝试加载图表
+            plot_status = "图表生成失败: " + plot_filename  # Update plot_status if plot generation fails
+            plot_filename = None  # Ensure no attempt to load the plot
     else:
+        print('Data retrieval failed')
         data_html = data
-        plot_path = None  # 如果数据获取失败，不显示图表
-        plot_status = "数据获取失败"
+        plot_filename = None
+        plot_status = "数据获取失败"  # Update plot_status if data retrieval fails
 
-    return render_template('stock_data.html', table=Markup(data_html), stock_code=stock_code, plot_path=plot_path, plot_status=plot_status)
+    print(plot_filename)
+    return render_template('stock_data.html', table=Markup(data_html), stock_code=stock_code, plot_filename=plot_filename, plot_status=plot_status)
+
 
 
 
