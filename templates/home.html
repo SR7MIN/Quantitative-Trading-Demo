@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>量化交易平台</title>
+<style>
+    body { font-family: Arial, sans-serif; }
+    header, footer { background-color: #f1f1f1; padding: 10px; text-align: center; }
+    nav { float: left; width: 20%; background: #ccc; padding: 20px; }
+    section { float: right; width: 80%; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid black; padding: 8px; text-align: left; }
+</style>
+</head>
+<body>
+<header>
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height: 100px;">
+    <h1>量化交易平台</h1>  
+</header>
+<nav>
+    <h2>导航</h2>
+    <ul>
+        <li><a href="/home/market-data">市场数据</a></li>
+        <li><a href="/home/trade-execution">交易执行</a></li>
+        <li><a href="/home/historical-data">历史数据</a></li>
+        <li><a href="/home/risk-management">风险管理</a></li>
+    </ul>
+</nav>
+<section>
+    <h2>欢迎</h2>
+    <p>欢迎访问我们的量化交易平台。</p>
+</section>
+<footer>
+    <p>版权所有 © 2024</p>
+</footer>
+</body>
+</html>
