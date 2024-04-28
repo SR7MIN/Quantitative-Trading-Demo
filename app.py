@@ -1,47 +1,61 @@
 import akshare as ak
 from flask import Flask, render_template, request, session, redirect, url_for
+from flask_mysqldb import MySQL
 from markupsafe import Markup
 import pandas as pd
 import os
-from flask import redirect
 import matplotlib.pyplot as plt
 import datetime
+import yaml
 
 from handle_stock_data import get_stock_data, save_plot
 
 app=Flask(__name__)
-# Set the secret key to some random bytes. Keep this really secret!
-#app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-# @app.route('/')
-# def index():
-#     if 'username' in session:   # session 中有一个键值叫 username，说明这个 session 是登录状态
-#         return f'Logged in as {session["username"]}'
-#     return 'You are not logged in'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(script_dir, 'db.yaml')
+with open(db_path, 'r') as file:
+    db = yaml.load(file, Loader=yaml.FullLoader)
+app.config['MYSQL_HOST'] = db['mysql_host']
+app.config['MYSQL_USER'] = db['mysql_user']
+app.config['MYSQL_PASSWORD'] = db['mysql_password']
+app.config['MYSQL_DB'] = db['mysql_db']
+mysql = MySQL(app)
 
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if request.method == 'POST':
-#         session['username'] = request.form['username']   # 将 username 存储在 session 中
-#         return redirect(url_for('index'))
-#     return '''
-#         <form method="post">
-#             <p><input type=text name=username>
-#             <p><input type=submit value=Login>
-#         </form>
-#     '''
-
-# @app.route('/logout')
-# def logout():
-#     # remove the username from the session if it's there
-#     session.pop('username', None)
-#     return redirect(url_for('index'))
-
-
-
-@app.route('/home')
-def home():
+@app.route('/')
+def index():
     return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        userDetails = request.form
+        username = userDetails['username']
+        password = userDetails['password']
+        cur = mysql.connection.cursor()
+        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+        if result > 0:
+            return redirect(url_for('home', username=username))
+        else:
+            return 'Login not successful'
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        userDetails = request.form
+        username = userDetails['username']
+        password = userDetails['password']
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for('home', username=username))
+    return render_template('signup.html')
+
+@app.route('/home/<username>')
+def home(username):
+    return render_template('home.html', username=username)
 
 @app.route('/home/market-data', methods=['GET', 'POST'])
 def market_data():
@@ -74,9 +88,6 @@ def stock(stock_code):
 
     print(plot_filename)
     return render_template('stock_data.html', table=Markup(data_html), stock_code=stock_code, plot_filename=plot_filename, plot_status=plot_status)
-
-
-
 
 @app.route('/home/trade-execution')
 def trade_execution():
