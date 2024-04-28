@@ -7,10 +7,10 @@ import os
 import matplotlib.pyplot as plt
 import datetime
 import yaml
-
 from handle_stock_data import get_stock_data, save_plot
 
 app=Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key_here'
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(script_dir, 'db.yaml')
@@ -35,6 +35,7 @@ def login():
         cur = mysql.connection.cursor()
         result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
         if result > 0:
+            session['username'] = username
             return redirect(url_for('home', username=username))
         else:
             return 'Login not successful'
@@ -50,6 +51,7 @@ def signup():
         cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
         mysql.connection.commit()
         cur.close()
+        session['username'] = username
         return redirect(url_for('home', username=username))
     return render_template('signup.html')
 
@@ -59,17 +61,18 @@ def home(username):
 
 @app.route('/home/market-data', methods=['GET', 'POST'])
 def market_data():
+    username = session.get('username')
     if request.method == 'POST':
         print("Processing POST request")
         stock_code = request.form.get('stock_code')
         # Directly redirect to the stock information page
-        return redirect(url_for('stock', stock_code=stock_code))
+        return redirect(url_for('stock', stock_code=stock_code,username=username))
     else:
         print("Processing GET request")
-        return render_template('market_data.html')
-
+        return render_template('market_data.html',username=username)
 @app.route('/home/stock/<stock_code>')
 def stock(stock_code):
+    username = session.get('username')
     plot_status = ""  # Initialize plot_status to a default value
     data = get_stock_data(stock_code)
     print('Processing stock data retrieval')
@@ -87,7 +90,7 @@ def stock(stock_code):
         plot_status = "数据获取失败"  # Update plot_status if data retrieval fails
 
     print(plot_filename)
-    return render_template('stock_data.html', table=Markup(data_html), stock_code=stock_code, plot_filename=plot_filename, plot_status=plot_status)
+    return render_template('stock_data.html', table=Markup(data_html), stock_code=stock_code, plot_filename=plot_filename, plot_status=plot_status, username=username)
 
 @app.route('/home/trade-execution')
 def trade_execution():
