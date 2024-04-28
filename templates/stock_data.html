@@ -6,15 +6,15 @@
 </head>
 <body>
     <h1>股票数据: {{ stock_code }}</h1>
-    {{ table|safe }}
     <!-- 显示plot_status信息 -->
     {% if plot_status %}
         <p>{{ plot_status }}</p>
     {% endif %}
     <!-- 如果有图表路径，则显示图表 -->
-    {% if plot_path %}
-        <img src="{{ url_for('static', filename=plot_path) }}" alt="Stock Chart" style="max-width:100%;">
+    {% if plot_filename %}
+        <img src="{{ url_for('static', filename=plot_filename) }}" alt="Stock Chart" style="max-width:100%;">
     {% endif %}
+    {{ table|safe }}
     <a href="/home/market-data">返回市场数据</a>
 </body>
 </html>
