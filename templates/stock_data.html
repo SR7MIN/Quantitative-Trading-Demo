@@ -13,6 +13,7 @@
     <!-- 如果有图表路径，则显示图表 -->
     {% if plot_filename %}
         <img src="{{ url_for('static', filename=plot_filename) }}" alt="Stock Chart" style="max-width:100%;">
+        <a href="/home/market-data">返回市场数据</a>
     {% endif %}
     {{ table|safe }}
     <a href="/home/market-data">返回市场数据</a>
