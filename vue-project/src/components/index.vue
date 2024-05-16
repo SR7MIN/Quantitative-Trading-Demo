@@ -4,7 +4,7 @@
         <el-container>
             <el-header>
                 搜索栏、用户设置等
-                <span class="welcome-message">欢迎您{{ user.name }}</span>
+                <span class="welcome-message">欢迎您:{{ user.name }}</span>
                 <el-button type="text" @click="handleLogout">退出登录</el-button>
             </el-header>
             <el-container>

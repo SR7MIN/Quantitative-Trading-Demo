@@ -1,11 +1,11 @@
 <template>
     <div class="home">
         <div class="hero-section">
-            <h1>量化投研，从聚宽开始</h1>
-            <p>我们提供免费的量化数据、投研工具、量化学习体系、在线交流社区</p>
+            <h1>量化投研，从智投开始</h1>
+            <p>我们提供免费的交易模拟、量化数据、投研工具、在线交流社区</p>
             <div class="cta-buttons">
-                <button class="register-btn">立即注册</button>
-                <button class="login-btn">登录</button>
+                <el-button type="success" @click="handle_signup">立即注册</el-button>
+                <el-button plain @click="handle_login">登录</el-button>
             </div>
         </div>
         <div class="illustrations">
@@ -15,8 +15,14 @@
 </template>
 
 <script setup>
-
-
+import { useRouter } from 'vue-router';
+const router = useRouter();
+function handle_login() {
+    router.push('/login');
+};
+function handle_signup() {
+    router.push('/sign_up');
+};
 </script>
 
 <style scoped>
@@ -28,7 +34,7 @@
 
     /* text-align: center; */
     padding: 50px 20px;
-    background-image: url('../assets/金软背景图2.jpg');
+    background-image: url('../assets/金软背景图1.png');
     /* 新增的代码 */
     background-size: cover;
     /* 新增的代码 */
@@ -52,20 +58,18 @@
     margin-bottom: 30px;
     color: white;
 }
-
+.el-button {
+    /* 添加以下代码来调整按钮的大小 */
+    padding: 20px 35px;
+    font-size: 14px;
+}
 .cta-buttons {
     display: flex;
-    justify-content: center;
+    justify-content: left;
     gap: 20px;
 }
 
-.register-btn,
-.login-btn {
-    padding: 15px 30px;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-}
+
 
 .register-btn {
     background-color: #4CAF50;

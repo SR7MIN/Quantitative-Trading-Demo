@@ -6,11 +6,11 @@
         <div class="login_form">
             <p1>量化交易平台-注册界面</p1>
             <el-form ref="formRef" :model="form" :rules="rules" label-width="auto">
-                <el-form-item label="">
+                <el-form-item label="" prop="account">
                     <!-- 账号似乎系统分配更好？不应让用户输入？类似QQ号的注册方式 -->
                     <el-input v-model="form.account" placeholder="请输入账号" :prefix-icon="User" />
                 </el-form-item>
-                <el-form-item label="">
+                <el-form-item label="" prop="name">
                     <el-input v-model="form.name" placeholder="请输入昵称" :prefix-icon="Avatar" />
                 </el-form-item>
                 <el-form-item label="" prop="password">
@@ -44,12 +44,16 @@ const form = ref({ //实际上 form应该写成user
     account: '',
 });
 
-// 表单校验，GPT写的，好像不太对，但是我也不知道怎么改
 const rules = reactive({
     password: [
         { validator: validatePassword, trigger: 'blur' }
     ],
-
+    name: [
+        { validator: validatename, trigger: 'blur' }
+    ],
+    account: [
+        { validator: validateaccount, trigger: 'blur' }
+    ],
     // 其他字段的验证规则
 });
 
@@ -61,6 +65,25 @@ function validatePassword(rule, value, callback) {
         callback();
     }
 }
+function validateaccount(rule, value, callback) {
+    const pattern = /^[0-9]{6,10}$/;
+    if (!pattern.test(value)) {
+        callback(new Error('账号应为6-10位的数字'));
+    } else {
+        callback();
+    }
+}
+function validatename(
+    rule,
+    value,
+    callback
+) {
+    if (value === '') {
+        callback(new Error('昵称不能为空'));
+    } else {
+        callback();
+    }
+}//账号不能为空
 
 const router = useRouter();
 function handle_login() {

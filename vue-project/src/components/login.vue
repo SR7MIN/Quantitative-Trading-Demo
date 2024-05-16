@@ -5,12 +5,14 @@
     <div class="login_container">
         <div class="login_form">
             <p1>量化交易平台-登录界面</p1>
-            <el-form ref="formRef" :model="form" label-width="auto">
-                <el-form-item label="">
-                    <el-input v-model="form.account" placeholder="请输入账号" :prefix-icon="User" />
+            <el-form ref="formRef" :model="form" :rules="rules" label-width="auto">
+                <el-form-item label="" prop="account">
+                    <el-input v-model="form.account" 
+                    placeholder="请输入账号" :prefix-icon="User" />
                 </el-form-item>
-                <el-form-item label="">
-                    <el-input v-model="form.password" style="width: 240px" type="password" placeholder="请输入密码"
+                <el-form-item label="" prop="password">
+                    <el-input v-model="form.password" style="width: 240px" 
+                     type="password" placeholder="请输入密码"
                         show-password :prefix-icon="Lock" />
                 </el-form-item>
                 <div class="text">
@@ -47,24 +49,48 @@ const router = useRouter();
 function handle_login() {
     form.value.name = '测试用户一号';
     ElMessage.success('登录成功');
-    router.push("/");
+    router.push("/index");
 };
 
 function handle_signup() {
     router.push('/sign_up');
 };
 
-const form =useStorage('user',({ //实际上 form应该写成user
+const form = useStorage('user', ({ //实际上 form应该写成user
     name: '',
     remember: false,
     password: '',
     account: '',
 }));
 
-if(form.value.name) {
+if (form.value.name) {
     handle_login()
 }
+const rules = reactive({
+    password: [
+        { validator: validatePassword, trigger: 'blur' }
+    ],
+    account: [
+        { validator: validateaccount, trigger: 'blur' }],
 
+    // 其他字段的验证规则
+});
+function validateaccount(rule, value, callback) {
+    const pattern = /^[0-9]{6,10}$/;
+    if (!pattern.test(value)) {
+        callback(new Error('账号应为6-10位的数字'));
+    } else {
+        callback();
+    }
+}
+function validatePassword(rule, value, callback) {
+    const pattern = /^[a-zA-Z0-9.,!@#$%^&*()]{3,10}$/;
+    if (!pattern.test(value)) {
+        callback(new Error('密码应为3-10位的数字、字母和标点的组合'));
+    } else {
+        callback();
+    }
+}
 
 
 // async function handle_login() {
