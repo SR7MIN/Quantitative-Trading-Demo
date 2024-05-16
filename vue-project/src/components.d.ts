@@ -31,8 +31,11 @@ declare module 'vue' {
     Helloworld_bar2: typeof import('./components/helloworld_bar2.vue')['default']
     Home: typeof import('./components/home.vue')['default']
     Login: typeof import('./components/login.vue')['default']
+    Risk_manage: typeof import('./components/risk_manage.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sign_up: typeof import('./components/sign_up.vue')['default']
+    Strategy: typeof import('./components/strategy.vue')['default']
+    User_setting: typeof import('./components/user_setting.vue')['default']
   }
 }

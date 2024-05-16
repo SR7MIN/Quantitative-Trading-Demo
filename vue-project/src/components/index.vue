@@ -30,17 +30,20 @@
                                 <el-menu-item index="1-4-1">item one</el-menu-item>
                             </el-sub-menu>
                         </el-sub-menu>
-                        <el-menu-item index="2">
+                        
+                        <el-menu-item index="2" @click="switch1">
                             <el-icon><icon-menu /></el-icon>
+                        
                             <span>量化策略</span>
+                        
                         </el-menu-item>
-                        <el-menu-item index="3">
+                        <el-menu-item index="3" @click="switch2">
                             <el-icon>
                                 <document />
                             </el-icon>
                             <span>风险管理</span>
                         </el-menu-item>
-                        <el-menu-item index="4">
+                        <el-menu-item index="4" @click="switch3">
                             <el-icon>
                                 <setting />
                             </el-icon>
@@ -48,7 +51,10 @@
                         </el-menu-item>
                     </el-menu>
                 </el-aside>
-                <el-main>主展示页面</el-main>
+                <el-main>
+                    <div>主展示页面</div> 
+                    <RouterView />
+                </el-main>
             </el-container>
         </el-container>
     </div>
@@ -72,8 +78,15 @@ const user =useStorage('user',({ //实际上 form应该写成user
 if(! user.value.name) {
     route.push('/login');
 }
-
-console.log(user);
+function switch1() {
+    route.push('/index/strategy');
+}
+function switch2() {
+    route.push('/index/manage');
+}
+function switch3() {
+    route.push('/index/setting');
+}
 </script>
 
 <style lang="scss" scoped>
