@@ -2,15 +2,15 @@ import os
 import yaml
 import pandas as pd
 from flask import Flask, request, session, jsonify, Response, redirect, url_for
-from flask_mysqldb import MySQL
+from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
 from handle_stock_data import get_stock_data, save_plot
 import json
 from datetime import datetime
-
+from flask_cors import CORS
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
-
+CORS(app, resources={r'/*': {'origins': '*'}})
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(script_dir, 'db.yaml')
 with open(db_path, 'r') as file:
@@ -41,35 +41,41 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        userDetails = request.form
+        userDetails = request.get_json()
         # Create a new User object
-        currentUser = User(userDetails['username'], userDetails['password'], userDetails['nickname'])
-        cur = mysql.connection.cursor()
+        currentUser = User(userDetails['account'], userDetails['password'], "")
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", 
                              (currentUser.username, currentUser.password))
+        cur.execute("SELECT nickname FROM users WHERE username = %s", (currentUser.username,))
+        result2 = cur.fetchone()
+        print(result2)
+        print("aaaaa")
+        print(result2['nickname'])
         if result > 0:
-            return redirect(url_for('home'))
+            return jsonify({'status': 'success', 'nickname': result2['nickname']})
         else:
             return jsonify({'status': 'failed', 'message': 'Login not successful'})
     return jsonify({'status': 'waiting for login'})
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    print("enter signup")
     if request.method == 'POST':
-        userDetails = request.form
-        currentUser = User(userDetails['username'], userDetails['password'])
-        
+        userDetails = request.get_json()
+        currentUser = User(userDetails['account'], userDetails['password'], userDetails['name'])
         cur = mysql.connection.cursor()
         # Check if the username already exists
         cur.execute("SELECT * FROM users WHERE username = %s", [currentUser.username])
         if cur.fetchone():
-            return jsonify({'status': 'failed', 'message': 'Username already taken, please choose another one!'})
-        
-        cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (currentUser.username, currentUser.password))
+            print("重复")
+            return jsonify({'status': 'failed', 'message': 'Username already taken, please choose another one!'})   
+        print("ccccc")
+        cur.execute("INSERT INTO users(username, nickname, password) VALUES(%s, %s, %s)", (currentUser.username, currentUser.nickname, currentUser.password))
         mysql.connection.commit()
         cur.close()
-        #return jsonify({'status': 'success', 'username': currentUser.username})
-        return redirect(url_for('home'))
+        return jsonify({'status': 'success', 'username': currentUser.username})
+        # return redirect(url_for('home'))
     return jsonify({'status': 'waiting for signing up'})
 
 @app.route('/home')
