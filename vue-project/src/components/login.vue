@@ -46,11 +46,11 @@ import { useStorage } from '@vueuse/core';
 
 const router = useRouter();
 
-function handle_login() {
-    form.value.name = '测试用户一号';
-    ElMessage.success('登录成功');
-    router.push("/index");
-};
+// function handle_login() {
+//     form.value.name = '测试用户一号';
+//     ElMessage.success('登录成功');
+//     router.push("/index");
+// };
 
 function handle_signup() {
     router.push('/sign_up');
@@ -91,26 +91,24 @@ function validatePassword(rule, value, callback) {
         callback();
     }
 }
-
-
-// async function handle_login() {
-//     const path = 'http://localhost:5000/login';
-//     try {
-//         const res = await axios.post(path, form.value);
-//         if (res.data.success) {
-//             ElMessage.success('登录成功');
-//             router.push('/index');
-//             form.value = res.data.user
-//         } else {
-//             // handle login failure
-//             console.error('Login failed');
-//             ElMessage.error('登录失败，请重试');
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         ElMessage.error('登录失败，请重试222');
-//     }
-// }
+async function handle_login() {
+    const path = 'http://localhost:5000/login';
+    try {
+        const res = await axios.post(path, form.value);
+        if (res.data.status === 'success') {
+            ElMessage.success('登录成功');
+            router.push('/index');
+            form.value.name = res.data.nickname;
+        } else {
+            // handle login failure
+            console.error('Login failed');
+            ElMessage.error('登录失败，请重试');
+        }
+    } catch (error) {
+        console.error(error);
+        ElMessage.error('登录失败，请重试222');
+    }
+}
 
 </script>
 

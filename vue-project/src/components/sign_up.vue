@@ -36,7 +36,8 @@
 // import { User } from '@element-plus/icons-vue/dist/types';
 import { useRouter } from 'vue-router'
 import { User, Lock, Avatar } from '@element-plus/icons-vue';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 const form = ref({ //实际上 form应该写成user
     name: '',
     remember: false,
@@ -91,16 +92,16 @@ function handle_login() {
 };
 
 async function send_sign_up() {
-    const path = 'http://localhost:5000/login';
+    const path = 'http://localhost:5000/signup';
     try {
         const res = await axios.post(path, form.value);
-        if (res.data.success) {
+        if (res.data.status === "success") {
             ElMessage.success('注册成功，请登录');
             router.push('/login');
         } else {
             // handle login failure
             console.error('Login failed');
-            ElMessage.error('注册失败，请重试');
+            ElMessage.error('注册失败，输入的账号已存在，请重新输入');
         }
     } catch (error) {
         console.error(error);
