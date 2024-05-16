@@ -1,5 +1,5 @@
 import akshare as ak
-from flask import Flask, render_template, request, session, redirect, url_for, flash
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify
 from flask_mysqldb import MySQL
 from markupsafe import Markup
 import pandas as pd
@@ -25,6 +25,7 @@ mysql = MySQL(app)
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
