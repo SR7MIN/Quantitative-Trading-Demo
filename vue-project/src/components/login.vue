@@ -46,11 +46,11 @@ import { useStorage } from '@vueuse/core';
 
 const router = useRouter();
 
-function handle_login() {
-    form.value.name = '测试用户一号';
-    ElMessage.success('登录成功');
-    router.push("/");
-};
+// function handle_login() {
+//     form.value.name = '测试用户一号';
+//     ElMessage.success('登录成功');
+//     router.push("/index");
+// };
 
 function handle_signup() {
     router.push('/sign_up');
@@ -66,27 +66,49 @@ const form = useStorage('user', ({ //实际上 form应该写成user
 if (form.value.name) {
     handle_login()
 }
+const rules = reactive({
+    password: [
+        { validator: validatePassword, trigger: 'blur' }
+    ],
+    account: [
+        { validator: validateaccount, trigger: 'blur' }],
 
-
-
-// async function handle_login() {
-//     const path = 'http://localhost:5000/login';
-//     try {
-//         const res = await axios.post(path, form.value);
-//         if (res.data.success) {
-//             ElMessage.success('登录成功');
-//             router.push('/index');
-//             form.value = res.data.user
-//         } else {
-//             // handle login failure
-//             console.error('Login failed');
-//             ElMessage.error('登录失败，请重试');
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         ElMessage.error('登录失败，请重试222');
-//     }
-// }
+    // 其他字段的验证规则
+});
+function validateaccount(rule, value, callback) {
+    const pattern = /^[0-9]{6,10}$/;
+    if (!pattern.test(value)) {
+        callback(new Error('账号应为6-10位的数字'));
+    } else {
+        callback();
+    }
+}
+function validatePassword(rule, value, callback) {
+    const pattern = /^[a-zA-Z0-9.,!@#$%^&*()]{3,10}$/;
+    if (!pattern.test(value)) {
+        callback(new Error('密码应为3-10位的数字、字母和标点的组合'));
+    } else {
+        callback();
+    }
+}
+async function handle_login() {
+    const path = 'http://localhost:5000/login';
+    try {
+        const res = await axios.post(path, form.value);
+        if (res.data.status === 'success') {
+            ElMessage.success('登录成功');
+            router.push('/index');
+            form.value.name = res.data.nickname;
+        } else {
+            // handle login failure
+            console.error('Login failed');
+            ElMessage.error('登录失败，请重试');
+        }
+    } catch (error) {
+        console.error(error);
+        ElMessage.error('登录失败，请重试222');
+    }
+}
 
 </script>
 
