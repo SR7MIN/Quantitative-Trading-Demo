@@ -1,15 +1,14 @@
-import akshare as ak
-from flask import Flask, render_template, request, session, redirect, url_for, flash
+import os
+import yaml
+import pandas as pd
+from flask import Flask, request, session, jsonify, Response, redirect, url_for
 from flask_mysqldb import MySQL
 from markupsafe import Markup
-import pandas as pd
-import os
-import matplotlib.pyplot as plt
-import datetime
-import yaml
 from handle_stock_data import get_stock_data, save_plot
+import json
+from datetime import datetime
 
-app=Flask(__name__)
+app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -22,98 +21,108 @@ app.config['MYSQL_PASSWORD'] = db['mysql_password']
 app.config['MYSQL_DB'] = db['mysql_db']
 mysql = MySQL(app)
 
+# 定义一个辅助函数来转换日期类型
+def default_converter(o):
+    if isinstance(o, datetime):
+        return o.isoformat()  # 或者任何其他格式化字符串
+    
+
+class User():
+    def __init__(self, username, password, nickname):
+        self.username = username
+        self.password = password
+        self.nickname = nickname
+current_user = User('not logged in', 'no password', 'no nickname')
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return jsonify({'message': 'Welcome to the stock trading app'})
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         userDetails = request.form
-        username = userDetails['username']
-        password = userDetails['password']
+        # Create a new User object
+        currentUser = User(userDetails['username'], userDetails['password'], userDetails['nickname'])
         cur = mysql.connection.cursor()
-        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", 
+                             (currentUser.username, currentUser.password))
         if result > 0:
-            session['username'] = username
-            return redirect(url_for('home', username=username))
+            return redirect(url_for('home'))
         else:
-            return 'Login not successful'
-    return render_template('login.html')
+            return jsonify({'status': 'failed', 'message': 'Login not successful'})
+    return jsonify({'status': 'waiting for login'})
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         userDetails = request.form
-        username = userDetails['username']
-        password = userDetails['password']
+        currentUser = User(userDetails['username'], userDetails['password'])
         
         cur = mysql.connection.cursor()
-        # 检查用户名是否已存在
-        cur.execute("SELECT * FROM users WHERE username = %s", [username])
+        # Check if the username already exists
+        cur.execute("SELECT * FROM users WHERE username = %s", [currentUser.username])
         if cur.fetchone():
-            # 如果用户名已存在，返回错误消息
-            flash('Username already taken, please choose another one!')
-            return render_template('signup.html')
+            return jsonify({'status': 'failed', 'message': 'Username already taken, please choose another one!'})
         
-        # 如果用户名不存在，插入新用户
-        cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
+        cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (currentUser.username, currentUser.password))
         mysql.connection.commit()
         cur.close()
-        
-        session['username'] = username
-        return redirect(url_for('home', username=username))
-    
-    return render_template('signup.html')
+        #return jsonify({'status': 'success', 'username': currentUser.username})
+        return redirect(url_for('home'))
+    return jsonify({'status': 'waiting for signing up'})
 
-@app.route('/home/<username>')
-def home(username):
-    return render_template('home.html', username=username)
+@app.route('/home')
+def home():
+    data = {'username':current_user.username, 'nickname':current_user.nickname}
+    response = json.dumps(data, ensure_ascii=False)
+    return Response(response, mimetype='application/json; charset=utf-8')
 
 @app.route('/home/market-data', methods=['GET', 'POST'])
 def market_data():
-    username = session.get('username')
     if request.method == 'POST':
         print("Processing POST request")
         stock_code = request.form.get('stock_code')
         # Directly redirect to the stock information page
-        return redirect(url_for('stock', stock_code=stock_code,username=username))
+        return redirect(url_for('stock', stock_code=stock_code))
     else:
-        print("Processing GET request")
-        return render_template('market_data.html',username=username)
+        return jsonify({'status': 'GET request processed'})
+
 @app.route('/home/stock/<stock_code>')
 def stock(stock_code):
-    username = session.get('username')
-    plot_status = ""  # Initialize plot_status to a default value
+    plot_status = ""
     data = get_stock_data(stock_code)
-    print('Processing stock data retrieval')
     if isinstance(data, pd.DataFrame):
-        print('Data retrieved successfully')
-        data_html = data.to_html(classes='table table-striped', border=0)
+        # 在 DataFrame 转字典之前转换所有日期类型的列
+        for col in data.select_dtypes(include=[pd.Timestamp]):
+            data[col] = data[col].apply(lambda x: x.isoformat() if pd.notnull(x) else None)
+        
+        data_dict = data.to_dict(orient='records')
+        data_json = json.dumps(data_dict, ensure_ascii=False, default=default_converter)
         plot_filename, plot_success = save_plot(data, stock_code)
         if not plot_success:
-            plot_status = "图表生成失败: " + plot_filename  # Update plot_status if plot generation fails
-            plot_filename = None  # Ensure no attempt to load the plot
+            plot_status = "图表生成失败: " + plot_filename
+            plot_filename = None
     else:
-        print('Data retrieval failed')
-        data_html = data
+        data_json = '{}'
         plot_filename = None
-        plot_status = "数据获取失败"  # Update plot_status if data retrieval fails
+        plot_status = "数据获取失败"
 
-    print(plot_filename)
-    return render_template('stock_data.html', table=Markup(data_html), stock_code=stock_code, plot_filename=plot_filename, plot_status=plot_status, username=username)
+    response = json.dumps({'data': data_json, 'plot_status': plot_status, 'plot_filename': plot_filename}, ensure_ascii=False)
+    return Response(response, mimetype='application/json; charset=utf-8')
+
 
 @app.route('/home/trade-execution')
 def trade_execution():
-    return "<h1>交易执行</h1><p>这里进行交易执行。</p>"
+    return jsonify({'message': 'trade-execution'})
 
 @app.route('/home/historical-data')
 def historical_data():
-    return "<h1>历史数据</h1><p>这里显示历史数据。</p>"
+    return jsonify({'message': 'historical-data'})
 
 @app.route('/home/risk-management')
 def risk_management():
-    return "<h1>风险管理</h1><p>这里进行风险管理。</p>"
+    return jsonify({'message': 'risk-managemant'})
 
 if __name__ == '__main__':
     app.run(debug=True)
