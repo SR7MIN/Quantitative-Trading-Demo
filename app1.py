@@ -25,6 +25,14 @@ mysql = MySQL(app)
 def default_converter(o):
     if isinstance(o, datetime):
         return o.isoformat()  # 或者任何其他格式化字符串
+    
+
+class User():
+    def __init__(self, username, password, nickname):
+        self.username = username
+        self.password = password
+        self.nickname = nickname
+current_user = User('not logged in', 'no password', 'no nickname')
 
 @app.route('/')
 def index():
@@ -34,68 +42,54 @@ def index():
 def login():
     if request.method == 'POST':
         userDetails = request.form
-        username = userDetails['username']
-        password = userDetails['password']
+        # Create a new User object
+        currentUser = User(userDetails['username'], userDetails['password'], userDetails['nickname'])
         cur = mysql.connection.cursor()
-        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", 
+                             (currentUser.username, currentUser.password))
         if result > 0:
-            session['username'] = username
-            return jsonify({'status': 'success', 'username': username})
+            return redirect(url_for('home'))
         else:
             return jsonify({'status': 'failed', 'message': 'Login not successful'})
-    return jsonify({'status': 'GET request - please provide credentials'})
+    return jsonify({'status': 'waiting for login'})
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         userDetails = request.form
-        username = userDetails['username']
-        password = userDetails['password']
+        currentUser = User(userDetails['username'], userDetails['password'])
         
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM users WHERE username = %s", [username])
+        # Check if the username already exists
+        cur.execute("SELECT * FROM users WHERE username = %s", [currentUser.username])
         if cur.fetchone():
             return jsonify({'status': 'failed', 'message': 'Username already taken, please choose another one!'})
         
-        cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
+        cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (currentUser.username, currentUser.password))
         mysql.connection.commit()
         cur.close()
-        
-        session['username'] = username
-        return jsonify({'status': 'success', 'username': username})
-    
-    return jsonify({'status': 'GET request - please fill out the form'})
+        #return jsonify({'status': 'success', 'username': currentUser.username})
+        return redirect(url_for('home'))
+    return jsonify({'status': 'waiting for signing up'})
 
-@app.route('/home/<username>')
-def home(username):
-    data = {'username': username}
+@app.route('/home')
+def home():
+    data = {'username':current_user.username, 'nickname':current_user.nickname}
     response = json.dumps(data, ensure_ascii=False)
     return Response(response, mimetype='application/json; charset=utf-8')
 
 @app.route('/home/market-data', methods=['GET', 'POST'])
-# def market_data():
-#     username=session.get('username')
-#     if request.method == 'POST':
-#         stock_code = request.form.get('stock_code')
-#         return jsonify({'status': 'POST request processed', 'stock_code': stock_code})
-#     else:
-#         return jsonify({'status': 'GET request processed'})
-
 def market_data():
-    username = session.get('username')
     if request.method == 'POST':
         print("Processing POST request")
         stock_code = request.form.get('stock_code')
         # Directly redirect to the stock information page
-        return redirect(url_for('stock', stock_code=stock_code,username=username))
+        return redirect(url_for('stock', stock_code=stock_code))
     else:
         return jsonify({'status': 'GET request processed'})
-        
-
 
 @app.route('/home/stock/<stock_code>')
 def stock(stock_code):
-    username = session.get('username')
     plot_status = ""
     data = get_stock_data(stock_code)
     if isinstance(data, pd.DataFrame):
@@ -114,7 +108,7 @@ def stock(stock_code):
         plot_filename = None
         plot_status = "数据获取失败"
 
-    response = json.dumps({'data': data_json, 'plot_status': plot_status, 'plot_filename': plot_filename, 'username': username}, ensure_ascii=False)
+    response = json.dumps({'data': data_json, 'plot_status': plot_status, 'plot_filename': plot_filename}, ensure_ascii=False)
     return Response(response, mimetype='application/json; charset=utf-8')
 
 
