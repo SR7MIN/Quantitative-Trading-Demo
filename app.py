@@ -34,40 +34,6 @@ class User():
         self.nickname = nickname
 current_user = User('not logged in', 'no password', 'no nickname')
 
-@app.route('/home/change-password', methods=['GET', 'POST'])
-def change_password():
-    if request.method == 'POST':
-        userDetails = request.get_json()
-        currentUser = User(userDetails['account'], userDetails['password'], "")
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", 
-                             (currentUser.username, currentUser.password))
-        if result > 0:
-            cur.execute("UPDATE users SET password = %s WHERE username = %s", (userDetails['newPassword'], currentUser.username))
-            mysql.connection.commit()
-            return jsonify({'status': 'success', 'message': 'Password changed successfully!'})
-        else:
-            return jsonify({'status': 'failed', 'message': 'Password change not successful'})
-    return jsonify({'status': 'waiting for changing password'})
-
-@app.route('/home/change-nickname', methods=['GET', 'POST'])
-def change_nickname():
-    if request.method == 'POST':
-        userDetails = request.get_json()
-        currentUser = User(userDetails['account'], userDetails['password'], "")
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", 
-                             (currentUser.username, currentUser.password))
-        if result > 0:
-            cur.execute("UPDATE users SET nickname = %s WHERE username = %s", (userDetails['newNickname'], currentUser.username))
-            mysql.connection.commit()
-            print("bbbbb")
-            return jsonify({'status': 'success', 'message': 'Nickname changed successfully!'})
-        
-        else:
-            return jsonify({'status': 'failed', 'message': 'Nickname change not successful'})
-    return jsonify({'status': 'waiting for changing nickname'})
-
 @app.route('/')
 def index():
     return jsonify({'message': 'Welcome to the stock trading app'})
@@ -117,6 +83,39 @@ def home():
     data = {'username':current_user.username, 'nickname':current_user.nickname}
     response = json.dumps(data, ensure_ascii=False)
     return Response(response, mimetype='application/json; charset=utf-8')
+
+@app.route('/home/change-password', methods=['GET', 'POST'])
+def change_password():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        currentUser = User(userDetails['account'], userDetails['password'], "")
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", 
+                             (currentUser.username, currentUser.password))
+        if result > 0:
+            cur.execute("UPDATE users SET password = %s WHERE username = %s", (userDetails['newPassword'], currentUser.username))
+            mysql.connection.commit()
+            return jsonify({'status': 'success', 'message': 'Password changed successfully!'})
+        else:
+            return jsonify({'status': 'failed', 'message': 'Password change not successful'})
+    return jsonify({'status': 'waiting for changing password'})
+
+@app.route('/home/change-nickname', methods=['GET', 'POST'])
+def change_nickname():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        currentUser = User(userDetails['account'], userDetails['password'], "")
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", 
+                             (currentUser.username, currentUser.password))
+        if result > 0:
+            cur.execute("UPDATE users SET nickname = %s WHERE username = %s", (userDetails['newNickname'], currentUser.username))
+            mysql.connection.commit()
+            return jsonify({'status': 'success', 'message': 'Nickname changed successfully!'})
+        else:
+            return jsonify({'status': 'failed', 'message': 'Nickname change not successful'})
+    return jsonify({'status': 'waiting for changing nickname'})
+
 
 @app.route('/home/market-data', methods=['GET', 'POST'])
 def market_data():
