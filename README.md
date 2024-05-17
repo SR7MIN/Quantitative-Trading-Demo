@@ -1,2 +1,1 @@
-- 只有vue-project中的文件和前端有关，有关运行的操作说明在vue-project的README中
-- 其他的文件大多都是我写的实验性文件，与实际平台运行无关
+# Quantitative-Trading-Demo

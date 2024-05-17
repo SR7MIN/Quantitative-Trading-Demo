@@ -1,0 +1,90 @@
+<!-- <!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>市场数据</title>
+</head>
+<body>
+    <h1>市场数据</h1>
+    <h2>查询股票</h2>
+    <form action="{{ url_for('market_data') }}" method="post">
+        <input type="text" name="stock_code" required placeholder="输入股票代码，如000001.SZ">
+        <button type="submit">查询</button>
+    </form>
+    <a href="/home/{{username}}">返回首页</a>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>市场数据</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f4f7fa;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 50px;
+    }
+    h1, h2 {
+        color: #333;
+    }
+    form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+    input[type="text"] {
+        padding: 10px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 300px; /* Set a fixed width for input */
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    a {
+        margin-top: 20px;
+        display: inline-block;
+        color: #007BFF;
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+    <h1>市场数据</h1>
+    <h2>查询股票</h2>
+    <form action="{{ url_for('market_data') }}" method="post">
+        <input type="text" name="stock_code" required placeholder="输入股票代码，如000001.SZ">
+        <button type="submit">查询</button>
+    </form>
+    <a href="/home/{{username}}">返回首页</a>
+</body>
+</html>
+
