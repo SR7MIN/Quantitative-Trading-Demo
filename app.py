@@ -10,10 +10,11 @@ from datetime import datetime
 from flask_cors import CORS
 import matplotlib.pyplot as plt
 import io
+import base64
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
-CORS(app, resources={r'/*': {'origins': '*'}})
+CORS(app, resources={r'/*': {'origins': '*'}}) # 不要修改此行！
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(script_dir, 'db.yaml')
 with open(db_path, 'r') as file:
@@ -124,6 +125,8 @@ def stock():
     if request.method == 'POST':
         stock_code = request.get_json()['code']
         stock_data = get_stock_data(stock_code)
+        print(stock_data)
+        print(type(stock_data))
         if isinstance(stock_data, pd.DataFrame):
             plt.figure(figsize=(10, 5))
             plt.plot(stock_data['日期'], stock_data['收盘'])
@@ -136,7 +139,14 @@ def stock():
             output=io.BytesIO()
             plt.savefig(output, format='png')
             output.seek(0)
-            return send_file(output, mimetype='image/png')
+            print("66666")
+            # 将图像转换为Base64编码的字符串
+            image_string = base64.b64encode(output.read()).decode('utf-8')
+            # 将DataFrame转换为字典
+            data_dict = stock_data.to_dict(orient='records')
+            # 将图像和数据一起作为JSON发送
+            return jsonify({'status': 'succeed','image': image_string, 'data': data_dict})
+            # return send_file(output, mimetype='image/png')
         else:
             return jsonify({'status': 'failed'})
     return jsonify({'status': 'waiting for stock code'})
