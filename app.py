@@ -1,13 +1,16 @@
 import os
 import yaml
 import pandas as pd
-from flask import Flask, request, session, jsonify, Response, redirect, url_for
+from flask import Flask, request, session, jsonify, Response, redirect, url_for, send_file
 from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
 from handle_stock_data import get_stock_data, save_plot
 import json
 from datetime import datetime
 from flask_cors import CORS
+import matplotlib.pyplot as plt
+import io
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 CORS(app, resources={r'/*': {'origins': '*'}})
@@ -116,40 +119,27 @@ def change_nickname():
             return jsonify({'status': 'failed', 'message': 'Nickname change not successful'})
     return jsonify({'status': 'waiting for changing nickname'})
 
-
-@app.route('/home/market-data', methods=['GET', 'POST'])
-def market_data():
+@app.route('/home/stock', methods=['GET', 'POST']) #从前端获取股票代码，在json中的key是"code"
+def stock():
     if request.method == 'POST':
-        print("Processing POST request")
-        stock_code = request.form.get('stock_code')
-        # Directly redirect to the stock information page
-        return redirect(url_for('stock', stock_code=stock_code))
-    else:
-        return jsonify({'status': 'GET request processed'})
-
-@app.route('/home/stock/<stock_code>')
-def stock(stock_code):
-    plot_status = ""
-    data = get_stock_data(stock_code)
-    if isinstance(data, pd.DataFrame):
-        # 在 DataFrame 转字典之前转换所有日期类型的列
-        for col in data.select_dtypes(include=[pd.Timestamp]):
-            data[col] = data[col].apply(lambda x: x.isoformat() if pd.notnull(x) else None)
-        
-        data_dict = data.to_dict(orient='records')
-        data_json = json.dumps(data_dict, ensure_ascii=False, default=default_converter)
-        plot_filename, plot_success = save_plot(data, stock_code)
-        if not plot_success:
-            plot_status = "图表生成失败: " + plot_filename
-            plot_filename = None
-    else:
-        data_json = '{}'
-        plot_filename = None
-        plot_status = "数据获取失败"
-
-    response = json.dumps({'data': data_json, 'plot_status': plot_status, 'plot_filename': plot_filename}, ensure_ascii=False)
-    return Response(response, mimetype='application/json; charset=utf-8')
-
+        stock_code = request.get_json()['code']
+        stock_data = get_stock_data(stock_code)
+        if isinstance(stock_data, pd.DataFrame):
+            plt.figure(figsize=(10, 5))
+            plt.plot(stock_data['日期'], stock_data['收盘'])
+            plt.title(f'Stock {stock_code} Closing Prices')
+            plt.xlabel('Date')
+            plt.ylabel('Closing Price')
+            plt.xticks(rotation=0)
+            plt.tight_layout()
+            plt.grid()
+            output=io.BytesIO()
+            plt.savefig(output, format='png')
+            output.seek(0)
+            return send_file(output, mimetype='image/png')
+        else:
+            return jsonify({'status': 'failed'})
+    return jsonify({'status': 'waiting for stock code'})
 
 @app.route('/home/trade-execution')
 def trade_execution():
