@@ -6,6 +6,7 @@ import helloworld from '@/components/helloworld.vue';
 import strategy from '@/components/strategy.vue';
 import risk_manage from '@/components/risk_manage.vue';
 import user_setting from '@/components/user_setting.vue';
+import shanghai from '@/components/shanghai.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +45,8 @@ const router = createRouter({
         // UserPosts will be rendered inside User's <router-view>
         // when /users/:username/posts is matched
         { path: 'setting', component: user_setting },
+
+        { path: 'shanghai', component: shanghai },
       ],
     }
   ]

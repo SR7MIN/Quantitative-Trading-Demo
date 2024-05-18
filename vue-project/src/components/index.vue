@@ -18,17 +18,19 @@
                                 </el-icon>
                                 <span>实时行情</span>
                             </template>
-                            <el-menu-item-group title="国内市场">
-                                <el-menu-item index="1-1">上证指数</el-menu-item>
-                                <el-menu-item index="1-2">深证成指</el-menu-item>
+                            <el-menu-item-group title="股市">
+                                <el-menu-item index="1-1" @click="switch_SH">国内市场</el-menu-item>
+                                <el-menu-item index="1-2">国际市场</el-menu-item>
                             </el-menu-item-group>
-                            <el-menu-item-group title="国际市场">
+                            <el-menu-item-group title="期货">
                                 <el-menu-item index="1-3">item three</el-menu-item>
                             </el-menu-item-group>
+                            <el-menu-item-group title="汇率">
                             <el-sub-menu index="1-4">
                                 <template #title>item four</template>
                                 <el-menu-item index="1-4-1">item one</el-menu-item>
                             </el-sub-menu>
+                        </el-menu-item-group>
                         </el-sub-menu>
                         
                         <el-menu-item index="2" @click="switch1">
@@ -78,14 +80,17 @@ const user =useStorage('user',({ //实际上 form应该写成user
 if(! user.value.name) {
     route.push('/login');
 }
-function switch1() {
+function switch1() { //跳转到量化策略页面
     route.push('/index/strategy');
 }
-function switch2() {
+function switch2() { //跳转到风险管理页面
     route.push('/index/manage');
 }
-function switch3() {
+function switch3() { //跳转到个性设置页面
     route.push('/index/setting');
+}
+function switch_SH() { //跳转到上证指数页面
+    route.push('/index/shanghai');
 }
 </script>
 

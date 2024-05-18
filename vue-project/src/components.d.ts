@@ -43,6 +43,7 @@ declare module 'vue' {
     Risk_manage: typeof import('./components/risk_manage.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Shanghai: typeof import('./components/shanghai.vue')['default']
     Sign_up: typeof import('./components/sign_up.vue')['default']
     Strategy: typeof import('./components/strategy.vue')['default']
     User_setting: typeof import('./components/user_setting.vue')['default']
