@@ -3,9 +3,14 @@
     <div class="common-layout">
         <el-container>
             <el-header>
-                搜索栏、用户设置等
-                <span class="welcome-message">欢迎您:{{ user.name }}</span>
-                <el-button type="text" @click="handleLogout">退出登录</el-button>
+                <!-- <div class="image1">
+                    <el-image style="width: 15px; height: 75px" src="../assets/艺术字.png" fit="contain" />
+                </div> 
+                离谱，加了这个图片不能正常显示，而且退出登录好像也不能用了 -->
+                
+                <div class="welcome-message">欢迎您:{{ user.name }} 
+                    <el-button type="primary" @click="handleLogout" plain>退出登录</el-button>
+                </div>
             </el-header>
             <el-container>
                 <el-aside width="200px">
@@ -26,18 +31,18 @@
                                 <el-menu-item index="1-3">item three</el-menu-item>
                             </el-menu-item-group>
                             <el-menu-item-group title="汇率">
-                            <el-sub-menu index="1-4">
-                                <template #title>item four</template>
-                                <el-menu-item index="1-4-1">item one</el-menu-item>
-                            </el-sub-menu>
-                        </el-menu-item-group>
+                                <el-sub-menu index="1-4">
+                                    <template #title>item four</template>
+                                    <el-menu-item index="1-4-1">item one</el-menu-item>
+                                </el-sub-menu>
+                            </el-menu-item-group>
                         </el-sub-menu>
-                        
+
                         <el-menu-item index="2" @click="switch1">
                             <el-icon><icon-menu /></el-icon>
-                        
+
                             <span>量化策略</span>
-                        
+
                         </el-menu-item>
                         <el-menu-item index="3" @click="switch2">
                             <el-icon>
@@ -54,7 +59,7 @@
                     </el-menu>
                 </el-aside>
                 <el-main>
-                    <div>主展示页面</div> 
+                    <div>主展示页面</div>
                     <RouterView />
                 </el-main>
             </el-container>
@@ -70,14 +75,14 @@ const handleLogout = () => {
     user.value = null;
     route.push('/login');
 };
-const user =useStorage('user',({ //实际上 form应该写成user
+const user = useStorage('user', ({ //实际上 form应该写成user
     name: '',
     remember: false,
     password: '',
     account: '',
 }));
 
-if(! user.value.name) {
+if (!user.value.name) {
     route.push('/login');
 }
 function switch1() { //跳转到量化策略页面
