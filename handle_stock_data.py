@@ -35,3 +35,16 @@ def get_stock_data(stock_code):
         return stock_data
     except Exception as e:
         return f"获取数据失败: {str(e)}"
+    
+
+def get_stock_current_price(stock_code):
+    try:
+        stock_info = ak.stock_zh_a_spot_em()
+        current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
+        return current_price
+    except Exception as e:
+        return 0
+    # stock_code=str(stock_code)
+    # stock_info = ak.stock_zh_a_spot_em()
+    # current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
+    # return current_price

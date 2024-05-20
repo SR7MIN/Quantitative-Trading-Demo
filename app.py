@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Flask, request, session, jsonify, Response, redirect, url_for, send_file
 from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
-from handle_stock_data import get_stock_data, save_plot
+from handle_stock_data import get_stock_data, save_plot, get_stock_current_price
 import json
 from datetime import datetime
 from flask_cors import CORS
@@ -151,9 +151,56 @@ def stock():
             return jsonify({'status': 'failed'})
     return jsonify({'status': 'waiting for stock code'})
 
+@app.route('/home/recharge', methods=['GET', 'POST'])#充值
+def recharge():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        sum=userDetails['sum']
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT balance FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            balance=result2['balance']
+            balance+=sum
+            cur.execute("UPDATE users SET balance = %s WHERE username = %s", (balance, account))
+            mysql.connection.commit()
+            return jsonify({'status': 'success'})
+    return jsonify({'status': 'waiting for recharging'})
+
 @app.route('/home/trade-execution')
-def trade_execution():
-    return jsonify({'message': 'trade-execution'})
+def trade_execution(): #交易执行 获取的json格式为{"code":int, "num":int ,"account":""}
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        stock_code=userDetails['code']
+        num=userDetails['num']
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:#接下来要select balance and stocks_held 前者是float 后者是json
+            cur.execute("SELECT balance FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            balance=result2['balance']
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+            result3 = cur.fetchone()
+            stocks_held=result3['stocks_held']
+            price=get_stock_current_price(stock_code)
+            if price==0:
+                return jsonify({'status': 'failed', 'message': 'Stock code not found'})
+            if balance>=num*price:
+                balance-=num*price
+                if stock_code in stocks_held:
+                    stocks_held[stock_code]+=num
+                else:
+                    stocks_held[stock_code]=num
+                cur.execute("UPDATE users SET balance = %s WHERE username = %s", (balance, account))
+                cur.execute("UPDATE users SET stocks_held = %s WHERE username = %s", (json.dumps(stocks_held), account))
+                mysql.connection.commit()
+                return jsonify({'status': 'success'})
+            else:
+                return jsonify({'status': 'failed', 'message': 'Insufficient balance'})
+    return jsonify({'status': 'waiting for trade execution'})
 
 @app.route('/home/historical-data')
 def historical_data():
