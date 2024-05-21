@@ -37,10 +37,18 @@ def get_stock_data(stock_code):
         return f"获取数据失败: {str(e)}"
     
 
-def get_stock_current_price(stock_code):
+def get_stock_current_price(stock_code, place='cn'):
+    stock_code=str(stock_code)
+    # 判断stock_code是5位还是6位
+    if len(stock_code) == 5:
+        place = 'hk'
     try:
-        stock_info = ak.stock_zh_a_spot_em()
-        current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
+        if place == 'cn':
+            stock_info = ak.stock_zh_a_spot_em()
+            current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
+        elif place == 'hk':
+            stock_info = ak.stock_hk_spot_em()
+            current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
         return current_price
     except Exception as e:
         return 0
@@ -48,3 +56,23 @@ def get_stock_current_price(stock_code):
     # stock_info = ak.stock_zh_a_spot_em()
     # current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
     # return current_price
+
+def get_stock_name(stock_code,place='cn'):
+    stock_code=str(stock_code)
+    if len(stock_code) == 5:
+        place = 'hk'
+    try:
+        if place == 'cn':
+            stock_info = ak.stock_zh_a_spot_em()
+            stock_name = stock_info[stock_info['代码'] == stock_code]['名称'].values[0]
+        elif place == 'hk':
+            stock_info = ak.stock_hk_spot_em()
+            stock_name = stock_info[stock_info['代码'] == stock_code]['名称'].values[0]
+        print(stock_name)
+        a={}
+        a['stock_name']=stock_name
+        print(a)
+        return stock_name
+
+    except Exception as e:
+        return 0

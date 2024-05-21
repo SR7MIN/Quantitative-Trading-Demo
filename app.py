@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Flask, request, session, jsonify, Response, redirect, url_for, send_file
 from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
-from handle_stock_data import get_stock_data, save_plot, get_stock_current_price
+from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name
 import json
 from datetime import datetime
 from flask_cors import CORS
@@ -145,7 +145,7 @@ def stock():
             # 将DataFrame转换为字典
             data_dict = stock_data.to_dict(orient='records')
             # 将图像和数据一起作为JSON发送
-            return jsonify({'status': 'succeed','image': image_string, 'data': data_dict})
+            return jsonify({'status': 'succeed','image': image_string, 'data': data_dict, 'stock_name': get_stock_name(stock_code)})
             # return send_file(output, mimetype='image/png')
         else:
             return jsonify({'status': 'failed'})
@@ -176,6 +176,7 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
         stock_code=userDetails['code']
         num=userDetails['num']
         account=userDetails['account']
+        place=userDetails['place']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
         if result > 0:#接下来要select balance and stocks_held 前者是float 后者是json
@@ -185,7 +186,7 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
             cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
             result3 = cur.fetchone()
             stocks_held=result3['stocks_held']
-            price=get_stock_current_price(stock_code)
+            price=get_stock_current_price(stock_code,place)
             if price==0:
                 return jsonify({'status': 'failed', 'message': 'Stock code not found'})
             if balance>=num*price:
@@ -213,6 +214,7 @@ def sell():
         stock_code=userDetails['code']
         num=userDetails['num']
         account=userDetails['account']
+        place=userDetails['place']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
         if result > 0:
@@ -222,7 +224,7 @@ def sell():
             cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
             result3 = cur.fetchone()
             stocks_held=result3['stocks_held']
-            price=get_stock_current_price(stock_code)
+            price=get_stock_current_price(stock_code,place)
             if price==0:
                 return jsonify({'status': 'failed', 'message': 'Stock code not found'})
             if stocks_held is None:
@@ -263,10 +265,9 @@ def stock_holding():
                 stocks_info={}
                 for stock_code in stocks_held:
                     price=get_stock_current_price(stock_code)
-                    stocks_info[stock_code]=[price, stocks_held[stock_code], price*stocks_held[stock_code]]
+                    stocks_info[stock_code]=[get_stock_name(stock_code), price, stocks_held[stock_code], price*stocks_held[stock_code]]
                 return jsonify({'status': 'success', 'stocks_info': stocks_info})
     return jsonify({'status': 'waiting for getting stock holding'})
-
 
 @app.route('/home/historical-data')
 def historical_data():
