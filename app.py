@@ -169,8 +169,8 @@ def recharge():
             return jsonify({'status': 'success'})
     return jsonify({'status': 'waiting for recharging'})
 
-@app.route('/home/trade-execution')
-def trade_execution(): #交易执行 获取的json格式为{"code":int, "num":int ,"account":""}
+@app.route('/home/buy', methods=['GET', 'POST'])#买入
+def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account":""}
     if request.method == 'POST':
         userDetails = request.get_json()
         stock_code=userDetails['code']
@@ -190,6 +190,10 @@ def trade_execution(): #交易执行 获取的json格式为{"code":int, "num":in
                 return jsonify({'status': 'failed', 'message': 'Stock code not found'})
             if balance>=num*price:
                 balance-=num*price
+                if stocks_held is None:
+                    stocks_held={}
+                else:
+                    stocks_held=json.loads(stocks_held)
                 if stock_code in stocks_held:
                     stocks_held[stock_code]+=num
                 else:
@@ -200,6 +204,45 @@ def trade_execution(): #交易执行 获取的json格式为{"code":int, "num":in
                 return jsonify({'status': 'success'})
             else:
                 return jsonify({'status': 'failed', 'message': 'Insufficient balance'})
+    return jsonify({'status': 'waiting for trade execution'})
+
+@app.route('/home/sell', methods=['GET', 'POST'])#卖出
+def sell():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        stock_code=userDetails['code']
+        num=userDetails['num']
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT balance FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            balance=result2['balance']
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+            result3 = cur.fetchone()
+            stocks_held=result3['stocks_held']
+            price=get_stock_current_price(stock_code)
+            if price==0:
+                return jsonify({'status': 'failed', 'message': 'Stock code not found'})
+            if stocks_held is None:
+                return jsonify({'status': 'failed', 'message': 'No stocks held'})
+            else:
+                stocks_held=json.loads(stocks_held)
+                if stock_code in stocks_held:
+                    if stocks_held[stock_code]>=num:
+                        balance+=num*price
+                        stocks_held[stock_code]-=num
+                        if stocks_held[stock_code]==0:
+                            del stocks_held[stock_code]
+                        cur.execute("UPDATE users SET balance = %s WHERE username = %s", (balance, account))
+                        cur.execute("UPDATE users SET stocks_held = %s WHERE username = %s", (json.dumps(stocks_held), account))
+                        mysql.connection.commit()
+                        return jsonify({'status': 'success'})
+                    else:
+                        return jsonify({'status': 'failed', 'message': 'Insufficient stocks held'})
+                else:
+                    return jsonify({'status': 'failed', 'message': 'No stocks held'})
     return jsonify({'status': 'waiting for trade execution'})
 
 @app.route('/home/historical-data')
