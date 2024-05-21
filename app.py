@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Flask, request, session, jsonify, Response, redirect, url_for, send_file
 from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
-from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name
+from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name, get_beijing_time
 import json
 from datetime import datetime
 from flask_cors import CORS
@@ -201,6 +201,16 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
                     stocks_held[stock_code]=num
                 cur.execute("UPDATE users SET balance = %s WHERE username = %s", (balance, account))
                 cur.execute("UPDATE users SET stocks_held = %s WHERE username = %s", (json.dumps(stocks_held), account))
+                # update history
+                cur.execute("SELECT history FROM users WHERE username = %s", (account,))
+                result4 = cur.fetchone()
+                history=result4['history']
+                if history is None:
+                    history=[]
+                else:
+                    history=json.loads(history)
+                history.append({'type': 'buy', 'stock_code': stock_code, 'stock_name': get_stock_name(stock_code), 'num': num, 'price': price, 'time': get_beijing_time()})
+                cur.execute("UPDATE users SET history = %s WHERE username = %s", (json.dumps(history), account))
                 mysql.connection.commit()
                 return jsonify({'status': 'success'})
             else:
@@ -239,6 +249,16 @@ def sell():
                             del stocks_held[stock_code]
                         cur.execute("UPDATE users SET balance = %s WHERE username = %s", (balance, account))
                         cur.execute("UPDATE users SET stocks_held = %s WHERE username = %s", (json.dumps(stocks_held), account))
+                        # update history
+                        cur.execute("SELECT history FROM users WHERE username = %s", (account,))
+                        result4 = cur.fetchone()
+                        history=result4['history']
+                        if history is None:
+                            history=[]
+                        else:
+                            history=json.loads(history)
+                        history.append({'type': 'sell', 'stock_code': stock_code, 'stock_name': get_stock_name(stock_code), 'num': num, 'price': price, 'time': get_beijing_time()})
+                        cur.execute("UPDATE users SET history = %s WHERE username = %s", (json.dumps(history), account))
                         mysql.connection.commit()
                         return jsonify({'status': 'success'})
                     else:
@@ -269,10 +289,38 @@ def stock_holding():
                 return jsonify({'status': 'success', 'stocks_info': stocks_info})
     return jsonify({'status': 'waiting for getting stock holding'})
 
-@app.route('/home/historical-data')
-def historical_data():
-    return jsonify({'message': 'historical-data'})
+@app.route('/home/history', methods=['GET', 'POST'])#查看历史交易记录
+def history():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT history FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            history=result2['history']
+            if history is None:
+                return jsonify({'status': 'failed', 'message': 'No history'})
+            else:
+                history=json.loads(history)
+                return jsonify({'status': 'success', 'history': history})
+    return jsonify({'status': 'waiting for getting history'})
 
+@app.route('/home/test', methods=['GET', 'POST'])#查看当前股票价格
+def test():
+    account='1257047642'
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+    if result > 0:
+        cur.execute("SELECT history FROM users WHERE username = %s", (account,))
+        result2 = cur.fetchone()
+        history=result2['history']
+        if history is None:
+            return jsonify({'status': 'failed', 'message': 'No history'})
+        else:
+            history=json.loads(history)
+            return jsonify({'status': 'success', 'history': history})
 @app.route('/home/risk-management')
 def risk_management():
     return jsonify({'message': 'risk-managemant'})

@@ -4,6 +4,10 @@ matplotlib.use('Agg')# don't delete it!!!
 import datetime
 import akshare as ak
 import os
+import time
+from datetime import datetime
+import pytz
+
 def save_plot(stock_data, stock_code):
     try:
         plt.figure(figsize=(10, 5))
@@ -76,3 +80,12 @@ def get_stock_name(stock_code,place='cn'):
 
     except Exception as e:
         return 0
+
+
+def get_beijing_time():
+    timestamp = time.time()
+    utc_time = datetime.utcfromtimestamp(timestamp)
+    beijing_tz = pytz.timezone('Asia/Shanghai')
+    beijing_time = utc_time.replace(tzinfo=pytz.utc).astimezone(beijing_tz)
+    formatted_beijing_time = beijing_time.strftime('%Y-%m-%d %H:%M:%S')
+    return formatted_beijing_time
