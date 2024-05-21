@@ -61,8 +61,14 @@
                     </el-card>
                 </div>
             </el-tab-pane>
-            <el-tab-pane label="我的收藏" name="second">我的收藏</el-tab-pane>
-            <el-tab-pane label="余额管理" name="third">余额管理</el-tab-pane>
+            <el-tab-pane label="我的收藏" name="second"><h1>
+                收藏的股票：
+            </h1>
+        </el-tab-pane>
+            <el-tab-pane label="余额管理" name="third">
+                余额管理
+                您的现有余额为：{{ user.balance }}
+            </el-tab-pane>
         </el-tabs>
     </div>
 </template>
@@ -82,6 +88,8 @@ const user = useStorage('user', ({
     remember: false,
     password: '',
     account: '',
+    balance: 1000000,
+    stocks_held: undefined,
 }));
 
 const dialogFormVisible = ref(false)

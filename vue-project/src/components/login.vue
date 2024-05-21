@@ -61,6 +61,8 @@ const form = useStorage('user', ({ //实际上 form应该写成user
     remember: false,
     password: '',
     account: '',
+    balance: 1000000,
+    stocks_held: undefined,
 }));
 
 if (form.value.name) {
@@ -99,6 +101,7 @@ async function handle_login() {
             ElMessage.success('登录成功');
             router.push('/index');
             form.value.name = res.data.nickname;
+            
         } else {
             // handle login failure
             console.error('Login failed');

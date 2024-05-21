@@ -43,6 +43,8 @@ const form = ref({ //实际上 form应该写成user
     remember: false,
     password: '',
     account: '',
+    balance: 1000000,
+    stocks_held: undefined,
 });
 
 const rules = reactive({

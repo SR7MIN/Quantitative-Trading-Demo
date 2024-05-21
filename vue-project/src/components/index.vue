@@ -95,11 +95,13 @@ const handleLogout = () => {
     user.value = null;
     route.push('/login');
 };
-const user = useStorage('user', ({ //实际上 form应该写成user
+const user = useStorage('user', ({
     name: '',
     remember: false,
     password: '',
     account: '',
+    balance: 1000000,
+    stocks_held: undefined,
 }));
 
 if (!user.value.name) {
