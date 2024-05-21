@@ -245,6 +245,29 @@ def sell():
                     return jsonify({'status': 'failed', 'message': 'No stocks held'})
     return jsonify({'status': 'waiting for trade execution'})
 
+@app.route('/home/stock-holding', methods=['GET', 'POST'])#查看持仓,返回{股票代码:[股票数量，单价，总价值]}
+def stock_holding():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            stocks_held=result2['stocks_held']
+            if stocks_held is None:
+                return jsonify({'status': 'failed', 'message': 'No stocks held'})
+            else:
+                stocks_held=json.loads(stocks_held)
+                stocks_info={}
+                for stock_code in stocks_held:
+                    price=get_stock_current_price(stock_code)
+                    stocks_info[stock_code]=[price, stocks_held[stock_code], price*stocks_held[stock_code]]
+                return jsonify({'status': 'success', 'stocks_info': stocks_info})
+    return jsonify({'status': 'waiting for getting stock holding'})
+
+
 @app.route('/home/historical-data')
 def historical_data():
     return jsonify({'message': 'historical-data'})
