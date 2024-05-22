@@ -56,7 +56,27 @@ def login():
         result2 = cur.fetchone()
         print(result2['nickname'])
         if result > 0:
-            return jsonify({'status': 'success', 'nickname': result2['nickname']})
+            #return jsonify({'status': 'success', 'nickname': result2['nickname']})
+            #返回status nickname history balance stocks_held
+            cur.execute("SELECT history FROM users WHERE username = %s", (currentUser.username,))
+            result3 = cur.fetchone()
+            history=result3['history']
+            cur.execute("SELECT balance FROM users WHERE username = %s", (currentUser.username,))
+            result4 = cur.fetchone()
+            balance=result4['balance']
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (currentUser.username,))
+            result5 = cur.fetchone()
+            stocks_held=result5['stocks_held']
+            stocks_held=json.loads(stocks_held)
+            stocks_info={}
+            for stock_code in stocks_held:
+                price=get_stock_current_price(stock_code)
+                stocks_info[stock_code]=[get_stock_name(stock_code), price, stocks_held[stock_code], price*stocks_held[stock_code]]
+            if history is None:
+                history=[]
+            else:
+                history=json.loads(history)
+            return jsonify({'status': 'success', 'nickname': result2['nickname'], 'history': history, 'balance': balance, 'stocks_info': stocks_info})
         else:
             return jsonify({'status': 'failed', 'message': 'Login not successful'})
     return jsonify({'status': 'waiting for login'})
@@ -118,8 +138,38 @@ def change_nickname():
             return jsonify({'status': 'failed', 'message': 'Nickname change not successful'})
     return jsonify({'status': 'waiting for changing nickname'})
 
-@app.route('/home/stock', methods=['GET', 'POST']) #从前端获取股票代码，在json中的key是"code"
-def stock():
+@app.route('/home/CNstock', methods=['GET', 'POST']) #从前端获取股票代码，在json中的key是"code"
+def CNstock():
+    if request.method == 'POST':
+        stock_code = request.get_json()['code']
+        stock_data = get_stock_data(stock_code)
+        print(stock_data)
+        print(type(stock_data))
+        if isinstance(stock_data, pd.DataFrame):
+            plt.figure(figsize=(10, 5))
+            plt.plot(stock_data['日期'], stock_data['收盘'])
+            plt.title(f'Stock {stock_code} Closing Prices')
+            plt.xlabel('Date')
+            plt.ylabel('Closing Price')
+            plt.xticks(rotation=0)
+            plt.tight_layout()
+            plt.grid()
+            output=io.BytesIO()
+            plt.savefig(output, format='png')
+            output.seek(0)
+            # 将图像转换为Base64编码的字符串
+            image_string = base64.b64encode(output.read()).decode('utf-8')
+            # 将DataFrame转换为字典
+            data_dict = stock_data.to_dict(orient='records')
+            # 将图像和数据一起作为JSON发送
+            return jsonify({'status': 'succeed','image': image_string, 'data': data_dict, 'stock_name': get_stock_name(stock_code)})
+            # return send_file(output, mimetype='image/png')
+        else:
+            return jsonify({'status': 'failed'})
+    return jsonify({'status': 'waiting for stock code'})
+
+@app.route('/home/HKstock', methods=['GET', 'POST']) #从前端获取股票代码，在json中的key是"code"
+def HKstock():
     if request.method == 'POST':
         stock_code = request.get_json()['code']
         stock_data = get_stock_data(stock_code)
@@ -152,7 +202,7 @@ def stock():
 def recharge():
     if request.method == 'POST':
         userDetails = request.get_json()
-        sum=userDetails['sum']
+        sum=int(userDetails['sum'])
         account=userDetails['account']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
@@ -163,7 +213,7 @@ def recharge():
             balance+=sum
             cur.execute("UPDATE users SET balance = %s WHERE username = %s", (balance, account))
             mysql.connection.commit()
-            return jsonify({'status': 'success'})
+            return jsonify({'status': 'success', "balance": balance})
     return jsonify({'status': 'waiting for recharging'})
 
 @app.route('/home/buy', methods=['GET', 'POST']) # 买入
@@ -213,7 +263,7 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
                 history.append({'type': 'buy', 'stock_code': stock_code, 'stock_name': get_stock_name(stock_code), 'num': num, 'price': price, 'time': get_beijing_time()})
                 cur.execute("UPDATE users SET history = %s WHERE username = %s", (json.dumps(history), account))
                 mysql.connection.commit()
-                return jsonify({'status': 'success'})
+                return jsonify({'status': 'success', 'balance':balance})
             else:
                 print("余额不足！")
                 return jsonify({'status': 'failed', 'message': 'Insufficient balance'})
@@ -224,9 +274,9 @@ def sell():
     if request.method == 'POST':
         userDetails = request.get_json()
         stock_code=userDetails['code']
-        num=userDetails['num']
+        print("/home/sell, stock_code",stock_code)
+        num=int(userDetails['num'])
         account=userDetails['account']
-        place=userDetails['place']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
         if result > 0:
@@ -236,7 +286,8 @@ def sell():
             cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
             result3 = cur.fetchone()
             stocks_held=result3['stocks_held']
-            price=get_stock_current_price(stock_code,place)
+            price=get_stock_current_price(stock_code)
+            print("price:",price)
             if price==0:
                 return jsonify({'status': 'failed', 'message': 'Stock code not found'})
             if stocks_held is None:
@@ -262,7 +313,7 @@ def sell():
                         history.append({'type': 'sell', 'stock_code': stock_code, 'stock_name': get_stock_name(stock_code), 'num': num, 'price': price, 'time': get_beijing_time()})
                         cur.execute("UPDATE users SET history = %s WHERE username = %s", (json.dumps(history), account))
                         mysql.connection.commit()
-                        return jsonify({'status': 'success'})
+                        return jsonify({'status': 'success', 'balance':balance})
                     else:
                         return jsonify({'status': 'failed', 'message': 'Insufficient stocks held'})
                 else:
@@ -312,20 +363,6 @@ def history():
                 return jsonify({'status': 'success', 'history': history})
     return jsonify({'status': 'waiting for getting history'})
 
-@app.route('/home/test', methods=['GET', 'POST']) # 查看当前股票价格
-def test():
-    account='1257047642'
-    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
-    if result > 0:
-        cur.execute("SELECT history FROM users WHERE username = %s", (account,))
-        result2 = cur.fetchone()
-        history=result2['history']
-        if history is None:
-            return jsonify({'status': 'failed', 'message': 'No history'})
-        else:
-            history=json.loads(history)
-            return jsonify({'status': 'success', 'history': history})
 @app.route('/home/risk-management')
 def risk_management():
     return jsonify({'message': 'risk-managemant'})
