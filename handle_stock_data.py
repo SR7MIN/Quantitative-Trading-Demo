@@ -5,7 +5,7 @@ import datetime
 import akshare as ak
 import os
 import time
-from datetime import datetime
+import datetime
 import pytz
 
 def save_plot(stock_data, stock_code):
@@ -55,6 +55,8 @@ def get_stock_current_price(stock_code, place='cn'):
             current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
         return current_price
     except Exception as e:
+        print(e)
+        print("异常")
         return 0
     # stock_code=str(stock_code)
     # stock_info = ak.stock_zh_a_spot_em()
@@ -84,7 +86,7 @@ def get_stock_name(stock_code,place='cn'):
 
 def get_beijing_time():
     timestamp = time.time()
-    utc_time = datetime.utcfromtimestamp(timestamp)
+    utc_time = datetime.datetime.utcfromtimestamp(timestamp)
     beijing_tz = pytz.timezone('Asia/Shanghai')
     beijing_time = utc_time.replace(tzinfo=pytz.utc).astimezone(beijing_tz)
     formatted_beijing_time = beijing_time.strftime('%Y-%m-%d %H:%M:%S')

@@ -15,6 +15,7 @@ import base64
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 CORS(app, resources={r'/*': {'origins': '*'}}) # 不要修改此行！
+# CORS(app)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(script_dir, 'db.yaml')
 with open(db_path, 'r') as file:
@@ -53,8 +54,6 @@ def login():
                              (currentUser.username, currentUser.password))
         cur.execute("SELECT nickname FROM users WHERE username = %s", (currentUser.username,))
         result2 = cur.fetchone()
-        print(result2)
-        print("aaaaa")
         print(result2['nickname'])
         if result > 0:
             return jsonify({'status': 'success', 'nickname': result2['nickname']})
@@ -74,7 +73,6 @@ def signup():
         if cur.fetchone():
             print("重复")
             return jsonify({'status': 'failed', 'message': 'Username already taken, please choose another one!'})   
-        print("ccccc")
         cur.execute("INSERT INTO users(username, nickname, password) VALUES(%s, %s, %s)", (currentUser.username, currentUser.nickname, currentUser.password))
         mysql.connection.commit()
         cur.close()
@@ -139,7 +137,6 @@ def stock():
             output=io.BytesIO()
             plt.savefig(output, format='png')
             output.seek(0)
-            print("66666")
             # 将图像转换为Base64编码的字符串
             image_string = base64.b64encode(output.read()).decode('utf-8')
             # 将DataFrame转换为字典
@@ -151,7 +148,7 @@ def stock():
             return jsonify({'status': 'failed'})
     return jsonify({'status': 'waiting for stock code'})
 
-@app.route('/home/recharge', methods=['GET', 'POST'])#充值
+@app.route('/home/recharge', methods=['GET', 'POST']) # 充值
 def recharge():
     if request.method == 'POST':
         userDetails = request.get_json()
@@ -169,12 +166,15 @@ def recharge():
             return jsonify({'status': 'success'})
     return jsonify({'status': 'waiting for recharging'})
 
-@app.route('/home/buy', methods=['GET', 'POST'])#买入
+@app.route('/home/buy', methods=['GET', 'POST']) # 买入
 def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account":""}
     if request.method == 'POST':
+        print("buy")
         userDetails = request.get_json()
         stock_code=userDetails['code']
-        num=userDetails['num']
+        print(type(stock_code))
+        num=int(userDetails['num'])
+        print(type(num))
         account=userDetails['account']
         place=userDetails['place']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -188,6 +188,7 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
             stocks_held=result3['stocks_held']
             price=get_stock_current_price(stock_code,place)
             if price==0:
+                print("股票代码未找到")
                 return jsonify({'status': 'failed', 'message': 'Stock code not found'})
             if balance>=num*price:
                 balance-=num*price
@@ -214,10 +215,11 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
                 mysql.connection.commit()
                 return jsonify({'status': 'success'})
             else:
+                print("余额不足！")
                 return jsonify({'status': 'failed', 'message': 'Insufficient balance'})
     return jsonify({'status': 'waiting for trade execution'})
 
-@app.route('/home/sell', methods=['GET', 'POST'])#卖出
+@app.route('/home/sell', methods=['GET', 'POST']) # 卖出
 def sell():
     if request.method == 'POST':
         userDetails = request.get_json()
@@ -267,7 +269,7 @@ def sell():
                     return jsonify({'status': 'failed', 'message': 'No stocks held'})
     return jsonify({'status': 'waiting for trade execution'})
 
-@app.route('/home/stock-holding', methods=['GET', 'POST'])#查看持仓,返回{股票代码:[股票数量，单价，总价值]}
+@app.route('/home/stock-holding', methods=['GET', 'POST']) # 查看持仓,返回{股票代码:[股票数量，单价，总价值]}
 def stock_holding():
     if request.method == 'POST':
         userDetails = request.get_json()
@@ -286,10 +288,12 @@ def stock_holding():
                 for stock_code in stocks_held:
                     price=get_stock_current_price(stock_code)
                     stocks_info[stock_code]=[get_stock_name(stock_code), price, stocks_held[stock_code], price*stocks_held[stock_code]]
+                    print("stocks_info:",stocks_info)
+                    print("code: ", stocks_info[stock_code])
                 return jsonify({'status': 'success', 'stocks_info': stocks_info})
     return jsonify({'status': 'waiting for getting stock holding'})
 
-@app.route('/home/history', methods=['GET', 'POST'])#查看历史交易记录
+@app.route('/home/history', methods=['GET', 'POST']) # 查看历史交易记录
 def history():
     if request.method == 'POST':
         userDetails = request.get_json()
@@ -304,10 +308,11 @@ def history():
                 return jsonify({'status': 'failed', 'message': 'No history'})
             else:
                 history=json.loads(history)
+                print("bbbb:",history)
                 return jsonify({'status': 'success', 'history': history})
     return jsonify({'status': 'waiting for getting history'})
 
-@app.route('/home/test', methods=['GET', 'POST'])#查看当前股票价格
+@app.route('/home/test', methods=['GET', 'POST']) # 查看当前股票价格
 def test():
     account='1257047642'
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
