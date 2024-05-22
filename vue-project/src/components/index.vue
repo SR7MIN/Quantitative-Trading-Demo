@@ -90,7 +90,7 @@
 import { useStorage } from '@vueuse/core';
 import { useRouter } from 'vue-router';
 const route = useRouter();
-const isCollapse = ref(true);
+const isCollapse = ref(false);
 const handleLogout = () => {
     user.value = null;
     route.push('/login');

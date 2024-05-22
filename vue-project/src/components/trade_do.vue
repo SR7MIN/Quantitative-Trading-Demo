@@ -15,8 +15,8 @@
                     </el-form-item>
                     <el-form-item label="股票所属市场" :label-width="formLabelWidth">
                         <el-select v-model="form.place" placeholder="Please select stock area">
-                            <el-option label="A股" value="shanghai" />
-                            <el-option label="港股" value="beijing" />
+                            <el-option label="A股" value="cn" />
+                            <el-option label="港股" value="hk" />
                         </el-select>
                     </el-form-item>
                     <el-form-item label="选购股数" :label-width="formLabelWidth">
@@ -34,16 +34,17 @@
     </div>
     <div>
         <h1 style="margin-top: 10px;">交易记录:</h1>
-        <el-table :data="tableData" stripe style="width: 100%">
-            <el-table-column prop="type" label="股票代码" width="180" />
-            <el-table-column prop="money" label="股票名称" width="180" />
-            <el-table-column prop="percent" label="交易数目" />
-            <el-table-column prop="money" label="交易金额" />
-            <el-table-column prop="money" label="手续费" />
-            <el-table-column prop="money" label="结算金额" />
+        <el-table :data="stock_history.value" stripe style="width: 100%">
+            <el-table-column prop="stock_code" label="股票代码" width="180" />
+            <el-table-column prop="stock_name" label="股票名称" width="180" />
+            <el-table-column prop="num" label="交易数目" />
+            <el-table-column prop="price" label="每股金额" />
+            <el-table-column label="总金额" :formatter="totalAmountFormatter" sortable :sort-method="sortTotalAmount"/>
+            <el-table-column prop="type" label="交易类型" :formatter="typeFormatter"/>
+            <el-table-column prop="time" label="交易时间" sortable/>
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button size="small" @click="handleEdit(scope.$index, scope.row)">
+                    <el-button size="small" @click="handle_sell">
                         卖出
                     </el-button>
                 </template>
@@ -53,14 +54,17 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive,onMounted} from 'vue';
+import { useStorage } from '@vueuse/core';
+import axios from 'axios';
 const dialog = ref(false)
 const loading = ref(false)
 let timer
 const form = reactive({  //记录想进行交易的股票信息
   code: '',
   place: '',
-  num: undefined
+  num: 0,
+  account: undefined
 })
 const user = useStorage('user', ({
     name: '',
@@ -72,7 +76,64 @@ const user = useStorage('user', ({
     {'code': '603000', 'place': 'cn', 'amount': 2000}
     ],
 }));
+const stock_history = reactive({
+    value: [],
+}
+)
+function handle_sell() {
+    
+}
+async function buy_stock() { // 购买
+    const path = 'http://localhost:5000/home/buy';
+    form.account = user.value.account;
+    try {
+        const res = await axios.post(path, form);
+        if (res.data.status === "success") {
+            ElMessage.success('交易成功');
+            get_stock_history();   
+        } else {
+            // handle login failure
+            console.error('Login failed');
+            ElMessage.error('交易失败，余额不足');
+        }
+    } catch (error) {
+        console.error(error);
+        ElMessage.error('网络问题，交易失败，请重试222');
+    }
+}
+
+async function get_stock_history() { // 获取历史交易记录
+    const path = 'http://localhost:5000/home/history';
+    try {
+        const res = await axios.post(path, user.value);
+        if (res.data.status === "success") {
+            stock_history.value = res.data.history;
+            console.log(stock_history.value);
+            console.log('获取历史交易记录成功');
+        } else {
+            
+            console.error('获取历史交易记录失败');
+        }
+    } catch (error) {
+        console.error(error);
+        console.error('网络问题，获取历史交易失败，请重试222');
+    }
+}
+
+onMounted(() => {
+    get_stock_history()
+})
+const typeFormatter = (row) => {
+    return row.type === 'buy' ? '买入' : '卖出';
+}
+const totalAmountFormatter = (row) => {
+    return (row.price * row.num).toFixed(2);
+}
+const sortTotalAmount = (a, b) => {
+    return (a.price * a.num) - (b.price * b.num);
+}
 const onClick = () => {
+    buy_stock()
     loading.value = true
     setTimeout(() => {
         loading.value = false
@@ -112,4 +173,6 @@ const cancelForm = () => {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+
+</style>

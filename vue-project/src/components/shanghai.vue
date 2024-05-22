@@ -48,7 +48,7 @@ const Search_stock = () => { //加载动画一直不成功，不懂。
                         message: `股票查询成功！`,
                     });
                     stock.code = value;
-                    stock.name = res.data.name;
+                    stock.name = res.data.stock_name;
                     imageUrl.value = 'data:image/png;base64,' + res.data.image;
                     stock.data = res.data.data;
                     // 这里你可以处理response.data.data，它包含了股票数据

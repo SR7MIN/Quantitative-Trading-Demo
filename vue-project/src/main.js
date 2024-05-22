@@ -7,9 +7,9 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import request from './utils/request'
 
 
-request.get('/hello').then(res => {
-  console.log(res)
-})
+// request.get('/hello').then(res => {
+//   console.log(res)
+// })
 
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
