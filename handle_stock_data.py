@@ -32,15 +32,18 @@ def save_plot(stock_data, stock_code):
 
 
 def get_stock_data(stock_code):
+    stock_code=str(stock_code)
     try:
         end_date = datetime.datetime.today().strftime('%Y%m%d')  
         start_date = (datetime.datetime.today() - datetime.timedelta(days=365)).strftime('%Y%m%d') 
-        stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=end_date, adjust="qfq")
+        if len(stock_code) == 5:
+            stock_data = ak.stock_hk_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=end_date, adjust="qfq")
+        else:
+            stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=end_date, adjust="qfq")
         return stock_data
     except Exception as e:
         return f"获取数据失败: {str(e)}"
     
-
 def get_stock_current_price(stock_code, place='cn'):
     stock_code=str(stock_code)
     # 判断stock_code是5位还是6位
