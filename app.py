@@ -202,7 +202,7 @@ def HKstock():
 def recharge():
     if request.method == 'POST':
         userDetails = request.get_json()
-        sum=userDetails['sum']
+        sum=int(userDetails['sum'])
         account=userDetails['account']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
@@ -274,7 +274,7 @@ def sell():
     if request.method == 'POST':
         userDetails = request.get_json()
         stock_code=userDetails['code']
-        num=userDetails['num']
+        num=int(userDetails['num'])
         account=userDetails['account']
         place=userDetails['place']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
