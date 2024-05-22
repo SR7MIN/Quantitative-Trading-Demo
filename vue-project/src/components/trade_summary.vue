@@ -29,9 +29,7 @@ const user = useStorage('user', ({
     password: '',
     account: '',
     balance: 1000000,
-    stocks_held: [{'code': '000001', 'place': 'cn', 'amount': 1000}, 
-    {'code': '603000', 'place': 'cn', 'amount': 2000}
-    ],
+    stocks_held: undefined,
 }));
 const chartRef = ref(null);
 const all_property = reactive({ //理论上，应该由后端根据用户持股来转换，而不是我在这里写死

@@ -37,7 +37,7 @@ const Search_stock = () => { //加载动画一直不成功，不懂。
     })
         .then(async ({ value }) => {
             try {
-                const res = await axios.post('http://localhost:5000/home/stock', {
+                const res = await axios.post('http://localhost:5000/home/CNstock', {
                     code: value
                 });
                

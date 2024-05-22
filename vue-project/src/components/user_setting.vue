@@ -61,13 +61,39 @@
                     </el-card>
                 </div>
             </el-tab-pane>
-            <el-tab-pane label="我的收藏" name="second"><h1>
-                收藏的股票：
-            </h1>
-        </el-tab-pane>
+            <el-tab-pane label="我的收藏" name="second">
+                <h1>
+                    收藏的股票：
+                </h1>
+            </el-tab-pane>
             <el-tab-pane label="余额管理" name="third">
-                余额管理
-                您的现有余额为：{{ user.balance }}
+                <div>
+                    您的现有余额为：{{ user.balance }}
+                </div>
+                <div>
+                    担心余额不足？想拥有更好体验？<br>
+                    请点击下方按钮进行充值！<br>
+
+                    <el-button type="success" round @click="rechargeDialog = true" 
+                    style="width: 200px;">充值</el-button>
+                    <el-dialog v-model="rechargeDialog" title="充值界面" width="500">
+                        <span>请扫描以下二维码完成支付：</span>
+                        <img src="../assets/付款码.jpg" alt="Payment QR Code" style="width: 100%;">
+                        <el-form :model="form">
+                            <el-form-item label="请输入充值金额" :label-width="formLabelWidth">
+                                <el-input v-model="form.sum" autocomplete="off" />
+                            </el-form-item>
+                        </el-form>
+                        <template #footer>
+                            <div class="dialog-footer">
+                                <el-button @click="rechargeDialog = false">取消</el-button>
+                                <el-button type="primary" @click="recharge">
+                                    确认
+                                </el-button>
+                            </div>
+                        </template>
+                    </el-dialog>
+                </div>
             </el-tab-pane>
         </el-tabs>
     </div>
@@ -91,10 +117,31 @@ const user = useStorage('user', ({
     balance: 1000000,
     stocks_held: undefined,
 }));
-
+const form = reactive({
+    sum: undefined,
+    account: '',
+})
 const dialogFormVisible = ref(false)
 const formLabelWidth = '140px'
 const can_change_or_not = ref(false) // 用于判断是否可以修改密码
+const rechargeDialog = ref(false);
+async function recharge() {
+    const path = 'http://localhost:5000/home/recharge';
+    form.account = user.value.account;
+    rechargeDialog.value = false;
+    try {
+        const res = await axios.post(path, form);
+        if (res.data.status === 'success') {
+            ElMessage.success('充值成功！');
+            user.value.balance = res.data.balance;
+        } else {
+            ElMessage.error('充值失败，请重试');
+        }
+    } catch (error) {
+        console.error(error);
+        ElMessage.error('网络问题，充值失败，请重试222');
+    }
+}
 const rules = reactive({
     password2: [
         { validator: validatePassword, trigger: 'blur' }

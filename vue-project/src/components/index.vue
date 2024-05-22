@@ -21,8 +21,8 @@
                         <el-radio-button :value="true">收起侧栏</el-radio-button>
                     </el-radio-group>
                     <el-menu default-active="2" class="el-menu-vertical-demo" :collapse="isCollapse"
-                        active-text-color="#ffd04b" background-color="#545c64" text-color="#fff" 
-                        @open="handleOpen" @close="handleClose">
+                        active-text-color="#ffd04b" background-color="#545c64" text-color="#fff" @open="handleOpen"
+                        @close="handleClose">
                         <el-sub-menu index="1">
                             <template #title>
                                 <el-icon>
@@ -89,6 +89,7 @@
 <script setup>
 import { useStorage } from '@vueuse/core';
 import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
 const route = useRouter();
 const isCollapse = ref(false);
 const handleLogout = () => {
@@ -103,7 +104,20 @@ const user = useStorage('user', ({
     balance: 1000000,
     stocks_held: undefined,
 }));
-
+// onMounted(async () => {
+//     try {
+//         user.value = useStorage('user', ({
+//             name: '',
+//             remember: false,
+//             password: '',
+//             account: '',
+//             balance: 1000000,
+//             stocks_held: undefined,
+//         }));
+//     } catch (error) {
+//         console.error(error);
+//     }
+// });
 if (!user.value.name) {
     route.push('/login');
 }
