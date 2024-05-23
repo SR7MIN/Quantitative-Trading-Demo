@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Flask, request, session, jsonify, Response, redirect, url_for, send_file
 from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
-from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name, get_beijing_time
+from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name, get_beijing_time, get_stock_all_info
 import json
 from datetime import datetime
 from flask_cors import CORS
@@ -146,23 +146,10 @@ def CNstock():
         print(stock_data)
         print(type(stock_data))
         if isinstance(stock_data, pd.DataFrame):
-            plt.figure(figsize=(10, 5))
-            plt.plot(stock_data['日期'], stock_data['收盘'])
-            plt.title(f'Stock {stock_code} Closing Prices')
-            plt.xlabel('Date')
-            plt.ylabel('Closing Price')
-            plt.xticks(rotation=0)
-            plt.tight_layout()
-            plt.grid()
-            output=io.BytesIO()
-            plt.savefig(output, format='png')
-            output.seek(0)
-            # 将图像转换为Base64编码的字符串
-            image_string = base64.b64encode(output.read()).decode('utf-8')
             # 将DataFrame转换为字典
             data_dict = stock_data.to_dict(orient='records')
             # 将图像和数据一起作为JSON发送
-            return jsonify({'status': 'succeed','image': image_string, 'data': data_dict, 'stock_name': get_stock_name(stock_code)})
+            return jsonify({'status': 'succeed', 'data': data_dict, 'stock_name': get_stock_name(stock_code), 'all_info': get_stock_all_info(stock_code)})
             # return send_file(output, mimetype='image/png')
         else:
             return jsonify({'status': 'failed'})
@@ -176,23 +163,10 @@ def HKstock():
         print(stock_data)
         print(type(stock_data))
         if isinstance(stock_data, pd.DataFrame):
-            plt.figure(figsize=(10, 5))
-            plt.plot(stock_data['日期'], stock_data['收盘'])
-            plt.title(f'Stock {stock_code} Closing Prices')
-            plt.xlabel('Date')
-            plt.ylabel('Closing Price')
-            plt.xticks(rotation=0)
-            plt.tight_layout()
-            plt.grid()
-            output=io.BytesIO()
-            plt.savefig(output, format='png')
-            output.seek(0)
-            # 将图像转换为Base64编码的字符串
-            image_string = base64.b64encode(output.read()).decode('utf-8')
             # 将DataFrame转换为字典
             data_dict = stock_data.to_dict(orient='records')
             # 将图像和数据一起作为JSON发送
-            return jsonify({'status': 'succeed','image': image_string, 'data': data_dict, 'stock_name': get_stock_name(stock_code)})
+            return jsonify({'status': 'succeed', 'data': data_dict, 'stock_name': get_stock_name(stock_code), 'all_info': get_stock_all_info(stock_code)})
             # return send_file(output, mimetype='image/png')
         else:
             return jsonify({'status': 'failed'})
@@ -363,6 +337,49 @@ def history():
                 print("bbbb:",history)
                 return jsonify({'status': 'success', 'history': history})
     return jsonify({'status': 'waiting for getting history'})
+
+@app.route('/home/topFive', methods=['GET', 'POST']) # 查看持股最多的前五名股票
+def topFive():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            stocks_held=result2['stocks_held']
+            if stocks_held is None:
+                return jsonify({'status': 'failed', 'message': 'No stocks held'})
+            else:
+                stocks_held=json.loads(stocks_held)
+                stocks_info={}
+                for stock_code in stocks_held:
+                    price=get_stock_current_price(stock_code)
+                    stocks_info[stock_code]=[get_stock_name(stock_code), price, stocks_held[stock_code], price*stocks_held[stock_code]]
+                # 按数量排序
+                #sorted_stocks_info=sorted(stocks_info.items(), key=lambda x: x[1][2], reverse=True)
+                # 按金额排序
+                sorted_stocks_info=sorted(stocks_info.items(), key=lambda x: x[1][3], reverse=True)
+                # 如果持仓股票种类少于5种，返回全部
+                if len(sorted_stocks_info)<=5:
+                    return jsonify({'status': 'success', 'topFive': sorted_stocks_info})
+                else:
+                    return jsonify({'status': 'success', 'topFive': sorted_stocks_info[:5]})
+    return jsonify({'status': 'waiting for getting topFive'})
+
+@app.route('/home/price', methods=['GET', 'POST']) # 查看当前股票价格
+def price():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        stock_code=userDetails['code']
+        price=get_stock_current_price(stock_code)
+        if price==0:
+            return jsonify({'status': 'failed', 'message': 'Stock code not found'})
+        return jsonify({'status': 'success', 'price': price})
+    return jsonify({'status': 'waiting for getting price'})
+            
+
 
 @app.route('/home/risk-management')
 def risk_management():

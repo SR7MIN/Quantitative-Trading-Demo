@@ -7,6 +7,7 @@ import os
 import time
 import datetime
 import pytz
+import json
 
 def save_plot(stock_data, stock_code):
     try:
@@ -66,10 +67,22 @@ def get_stock_current_price(stock_code, place='cn'):
         print(e)
         print("异常")
         return 0
-    # stock_code=str(stock_code)
-    # stock_info = ak.stock_zh_a_spot_em()
-    # current_price = stock_info[stock_info['代码'] == stock_code]['最新价'].values[0]
-    # return current_price
+
+def get_stock_all_info(stock_code, place='cn'):
+    stock_code=str(stock_code)
+    if len(stock_code) == 5:
+        place = 'hk'
+    try:
+        if place == 'cn':
+            stock_info = ak.stock_zh_a_spot_em()
+            stock_all_info = stock_info[stock_info['代码'] == stock_code]
+        elif place == 'hk':
+            stock_info = ak.stock_hk_spot_em()
+            stock_all_info = stock_info[stock_info['代码'] == stock_code]
+        return stock_all_info
+    except Exception as e:
+        return 0
+
 
 def get_stock_name(stock_code,place='cn'):
     stock_code=str(stock_code)
