@@ -379,7 +379,31 @@ def price():
         return jsonify({'status': 'success', 'price': price})
     return jsonify({'status': 'waiting for getting price'})
             
-
+# 计算所有股票的总价值和balance的和
+@app.route('/home/total', methods=['GET', 'POST'])
+def total():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT balance FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            balance=result2['balance']
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+            result3 = cur.fetchone()
+            stocks_held=result3['stocks_held']
+            if stocks_held is None:
+                return jsonify({'status': 'success', 'total': balance})
+            else:
+                stocks_held=json.loads(stocks_held)
+                total=balance
+                for stock_code in stocks_held:
+                    price=get_stock_current_price(stock_code)
+                    total+=price*stocks_held[stock_code]
+                return jsonify({'status': 'success', 'total': total})
+    return jsonify({'status': 'waiting for getting total'})
 
 @app.route('/home/risk-management')
 def risk_management():
