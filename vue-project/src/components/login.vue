@@ -62,6 +62,7 @@ const form = useStorage('user', ({ //实际上 form应该写成user
     password: '',
     account: '',
     balance: 1000000,
+    all_property: 0,
     stocks_held: [],
 }));
 

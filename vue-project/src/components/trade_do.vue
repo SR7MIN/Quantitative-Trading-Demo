@@ -35,7 +35,7 @@
     </div>
     <div>
         <h1 style="margin-top: 10px;">交易记录:</h1>
-        <el-table :data="stock_history.value" stripe style="width: 100%">
+        <el-table :data="stock_history.value" stripe style="width: 100%" height="500">
             <el-table-column prop="stock_code" label="股票代码" width="180" />
             <el-table-column prop="stock_name" label="股票名称" width="180" />
             <el-table-column prop="num" label="交易数目" />
@@ -103,6 +103,7 @@ const user = useStorage('user', ({
     password: '',
     account: '',
     balance: 1000000,
+    all_property: 0,
     stocks_held: undefined,
 }));
 const stock_history = reactive({

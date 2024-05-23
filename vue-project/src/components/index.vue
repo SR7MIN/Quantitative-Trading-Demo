@@ -78,7 +78,9 @@
                     </el-menu>
                 </el-aside>
                 <el-main>
-                    <div>主展示页面</div>
+                    <div>
+                        您的总资产为：{{ user.all_property }} (总资产=现金+持股)
+                    </div>
                     <RouterView />
                 </el-main>
             </el-container>
@@ -90,6 +92,7 @@
 import { useStorage } from '@vueuse/core';
 import { useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';
+import axios from 'axios';
 const route = useRouter();
 const isCollapse = ref(false);
 const handleLogout = () => {
@@ -102,8 +105,28 @@ const user = useStorage('user', ({
     password: '',
     account: '',
     balance: 1000000,
+    all_property: 0,
     stocks_held: undefined,
 }));
+async function get_all_property() {
+    const path = 'http://localhost:5000/home/total';
+    try {
+        const res = await axios.post(path, user.value);
+        if (res.data.status === "success") {
+            user.value.all_property = res.data.total;
+            console.log('获取用户所有资产成功');
+            console.log(user.value.all_property);
+        } else {
+            console.error('获取用户所有资产失败');
+        }
+    } catch (error) {
+        console.error(error);
+        console.error('网络问题，获取用户所有资产失败，请重试');
+    }
+}
+onMounted(() => {
+    get_all_property()
+})
 // onMounted(async () => {
 //     try {
 //         user.value = useStorage('user', ({

@@ -1,14 +1,58 @@
 <template>
     <div>
-        可查询国内A股的全部股票信息
+        可查询A股的全部股票信息
         <el-button type="primary" @click="Search_stock">
             <el-icon>
                 <Search />
             </el-icon>
             股票查询</el-button>
     </div>
-    <div ref="chartRef" style="width: 600px;height:400px;"></div>
-    
+    <div>
+        <el-row>
+            <el-col :span="12">
+                <div class="grid-content ep-bg-purple" />
+                <div ref="chartRef" style="width: 600px;height:400px;"></div>
+            </el-col>
+            <el-col :span="12">
+                <div class="grid-content ep-bg-purple-light" />
+                <div ref="chartRef2" style="width: 600px;height:400px;"></div>
+            </el-col>
+        </el-row>
+        <div>
+            <h1>近五日交易详细信息</h1>
+        </div>
+        <el-table :data="recentData.value" stripe style="width: 100%">
+            <el-table-column prop="日期" label="日期" :formatter="(row) => new Date(row.日期).toLocaleDateString()" />
+            <el-table-column prop="开盘" label="开盘" />
+            <el-table-column prop="收盘" label="收盘" />
+            <el-table-column prop="最高" label="最高" />
+            <el-table-column prop="最低" label="最低" />
+            <el-table-column prop="成交量" label="成交量" />
+            <!-- 成交额    振幅   涨跌幅   涨跌额   换手率 -->
+            <el-table-column prop="成交额" label="成交额" />
+            <el-table-column prop="振幅" label="振幅" />
+            <el-table-column prop="涨跌幅" label="涨跌幅" />
+            <el-table-column prop="涨跌额" label="涨跌额" />
+            <el-table-column prop="换手率" label="换手率" />
+        </el-table>
+        <div>
+            <h1>今日最新交易信息</h1>
+            <el-table :data="todayData.value" stripe style="width: 100%">
+                <el-table-column prop="代码" label="代码" />
+                <el-table-column prop="名称" label="名称" />
+                <el-table-column prop="最新价" label="最新价" />
+                <el-table-column prop="成交量" label="成交量" />
+                <el-table-column prop="成交额" label="成交额" />
+                <el-table-column prop="今开" label="今开" />
+                <el-table-column prop="昨收" label="昨收" />
+                <el-table-column prop="最低" label="最低" />
+                <el-table-column prop="最高" label="最高" />
+                <el-table-column prop="涨跌幅" label="涨跌幅" />
+                <el-table-column prop="涨跌额" label="涨跌额" />
+            </el-table>
+        </div>
+    </div>
+
 </template>
 
 <script setup>
@@ -16,19 +60,31 @@ import { ref, reactive } from 'vue';
 import axios from 'axios';
 import * as echarts from 'echarts';
 import { ElLoading, ElMessage, ElMessageBox } from 'element-plus';
+import { onMounted } from 'vue';
 let chart = null;
 const chartRef = ref(null);
-const imageUrl = ref('');
+let chart2 = null;
+const chartRef2 = ref(null);
+let recentData = reactive({ //近五天历史数据
+    value: [],
+});
+let todayData = reactive({
+    value: [],
+});
+let recentData2 = reactive({ //近60天历史数据，用来画K线图
+    value: [],
+    // 里面包括60天的日期 开盘 收盘 最高 最低 成交量 成交额 振幅 涨跌幅 涨跌额 换手率
+});
 const stock = reactive({
     code: '',
     name: '',
     data: ''
 })
-async function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-const Search_stock = () => { //加载动画一直不成功，不懂。
-    const loading = ElLoading.service({ lock: true,fullscreen: true, text: "正在查询中..." });
+// async function delay(ms) {
+//     return new Promise(resolve => setTimeout(resolve, ms));
+// }
+const Search_stock = () => {
+    const loading = ElLoading.service({ lock: true, fullscreen: true, text: "正在查询中..." });
     ElMessageBox.prompt('请输入您要查询的股票代码', 'Tip', {
         confirmButtonText: 'OK',
         cancelButtonText: 'Cancel',
@@ -40,7 +96,7 @@ const Search_stock = () => { //加载动画一直不成功，不懂。
                 const res = await axios.post('http://localhost:5000/home/CNstock', {
                     code: value
                 });
-               
+
                 loading.close();
                 if (res.data.status === "succeed") {
                     ElMessage({
@@ -49,15 +105,22 @@ const Search_stock = () => { //加载动画一直不成功，不懂。
                     });
                     stock.code = value;
                     stock.name = res.data.stock_name;
-                    imageUrl.value = 'data:image/png;base64,' + res.data.image;
                     stock.data = res.data.data;
+                    recentData.value = stock.data.slice(-5);
+                    recentData2.value = stock.data.slice(-60);
+                    todayData.value = res.data.all_info;
+                    console.log(todayData.value);
                     // 这里你可以处理response.data.data，它包含了股票数据
 
                     // 使用ECharts绘制图表
                     chart = echarts.init(chartRef.value);
+                    const dates = stock.data.map(item => {
+                        const date = new Date(item.日期);
+                        return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    });
                     chart.setOption({
                         title: {
-                            text: `历史股价 - ${stock.name}`
+                            text: `近一年历史股价 - ${stock.name}`
                         },
 
                         tooltip: {
@@ -74,7 +137,7 @@ const Search_stock = () => { //加载动画一直不成功，不懂。
                             type: 'inside'
                         }],
                         xAxis: {
-                            data: stock.data.map(item => item.日期),
+                            data: dates,
                             type: 'category',
                             name: '日期'
                         },
@@ -88,6 +151,58 @@ const Search_stock = () => { //加载动画一直不成功，不懂。
                             name: '收盘价',
                             type: 'line',
                             data: stock.data.map(item => item.收盘)
+                        }]
+                    });
+                    chart2 = echarts.init(chartRef2.value);
+                    // const dates2 = recentData2.value.map(item => item.日期);
+                    const dates2 = recentData2.value.map(item => {
+                        const date = new Date(item.日期);
+                        return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    });
+                    const data2 = recentData2.value.map(item => [item.开盘, item.收盘, item.最低, item.最高]);
+                    // 计算均线
+                    const maLine = data2.map((item, index, array) => {
+                        if (index < 5) {
+                            return '-';
+                        } else {
+                            let sum = 0;
+                            for (let i = 0; i < 5; i++) {
+                                sum += array[index - i][1]; // 收盘价
+                            }
+                            return (sum / 5).toFixed(2);
+                        }
+                    });
+                    const prices = data2.flat();
+                    const minPrice = Math.min(...prices);
+                    const maxPrice = Math.max(...prices);
+                    chart2.setOption({
+                        title: {
+                            text: `近60个交易日K线图`
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'cross'
+                            }
+                        },
+                        xAxis: {
+                            data: dates2
+                        },
+                        yAxis: {
+                            min: (minPrice - (maxPrice - minPrice) * 0.05).toFixed(2),
+                            max: (maxPrice + (maxPrice - minPrice) * 0.05).toFixed(2)
+                        },
+                        series: [{
+                            type: 'k',
+                            data: data2
+                        }, {
+                            type: 'line',
+                            data: maLine,
+                            smooth: true,
+                            lineStyle: {
+                                normal: { opacity: 0.5 }
+                            },
+                            name: 'MA5'
                         }]
                     });
                 }

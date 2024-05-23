@@ -115,6 +115,7 @@ const user = useStorage('user', ({
     password: '',
     account: '',
     balance: 1000000,
+    all_property: 0,
     stocks_held: undefined,
 }));
 const form = reactive({
