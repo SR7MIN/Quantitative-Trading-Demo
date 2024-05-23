@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BacktestResults: typeof import('./components/BacktestResults.vue')['default']
     Components: typeof import('./components/index.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -36,6 +37,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Sign_up: typeof import('./components/sign_up.vue')['default']
     Strategy: typeof import('./components/strategy.vue')['default']
+    StrategyEditor: typeof import('./components/StrategyEditor.vue')['default']
     User_setting: typeof import('./components/user_setting.vue')['default']
   }
 }

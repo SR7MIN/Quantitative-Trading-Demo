@@ -5,7 +5,7 @@ import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import request from './utils/request'
-
+import 'ace-builds/src-noconflict/theme-monokai';
 
 request.get('/hello').then(res => {
   console.log(res)
