@@ -170,38 +170,6 @@ def CNstock():
 
 @app.route('/home/HKstock', methods=['GET', 'POST']) #从前端获取股票代码，在json中的key是"code"
 def HKstock():
-@app.route('/home/CNstock', methods=['GET', 'POST']) #从前端获取股票代码，在json中的key是"code"
-def CNstock():
-    if request.method == 'POST':
-        stock_code = request.get_json()['code']
-        stock_data = get_stock_data(stock_code)
-        print(stock_data)
-        print(type(stock_data))
-        if isinstance(stock_data, pd.DataFrame):
-            plt.figure(figsize=(10, 5))
-            plt.plot(stock_data['日期'], stock_data['收盘'])
-            plt.title(f'Stock {stock_code} Closing Prices')
-            plt.xlabel('Date')
-            plt.ylabel('Closing Price')
-            plt.xticks(rotation=0)
-            plt.tight_layout()
-            plt.grid()
-            output=io.BytesIO()
-            plt.savefig(output, format='png')
-            output.seek(0)
-            # 将图像转换为Base64编码的字符串
-            image_string = base64.b64encode(output.read()).decode('utf-8')
-            # 将DataFrame转换为字典
-            data_dict = stock_data.to_dict(orient='records')
-            # 将图像和数据一起作为JSON发送
-            return jsonify({'status': 'succeed','image': image_string, 'data': data_dict, 'stock_name': get_stock_name(stock_code)})
-            # return send_file(output, mimetype='image/png')
-        else:
-            return jsonify({'status': 'failed'})
-    return jsonify({'status': 'waiting for stock code'})
-
-@app.route('/home/HKstock', methods=['GET', 'POST']) #从前端获取股票代码，在json中的key是"code"
-def HKstock():
     if request.method == 'POST':
         stock_code = request.get_json()['code']
         stock_data = get_stock_data(stock_code)
