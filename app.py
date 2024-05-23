@@ -148,8 +148,8 @@ def CNstock():
         if isinstance(stock_data, pd.DataFrame):
             # 将DataFrame转换为字典
             data_dict = stock_data.to_dict(orient='records')
-            # 将图像和数据一起作为JSON发送
-            return jsonify({'status': 'succeed', 'data': data_dict, 'stock_name': get_stock_name(stock_code), 'all_info': get_stock_all_info(stock_code)})
+            all_info = get_stock_all_info(stock_code)
+            return jsonify({'status': 'succeed', 'data': data_dict, 'stock_name': get_stock_name(stock_code), 'all_info': all_info.to_dict(orient='records')})
             # return send_file(output, mimetype='image/png')
         else:
             return jsonify({'status': 'failed'})
@@ -165,8 +165,8 @@ def HKstock():
         if isinstance(stock_data, pd.DataFrame):
             # 将DataFrame转换为字典
             data_dict = stock_data.to_dict(orient='records')
-            # 将图像和数据一起作为JSON发送
-            return jsonify({'status': 'succeed', 'data': data_dict, 'stock_name': get_stock_name(stock_code), 'all_info': get_stock_all_info(stock_code)})
+            all_info = get_stock_all_info(stock_code)
+            return jsonify({'status': 'succeed', 'data': data_dict, 'stock_name': get_stock_name(stock_code), 'all_info': all_info.to_dict(orient='records')})
             # return send_file(output, mimetype='image/png')
         else:
             return jsonify({'status': 'failed'})
@@ -362,6 +362,8 @@ def topFive():
                 # 按金额排序
                 sorted_stocks_info=sorted(stocks_info.items(), key=lambda x: x[1][3], reverse=True)
                 # 如果持仓股票种类少于5种，返回全部
+                print("type: ", type(sorted_stocks_info))
+                print(sorted_stocks_info)
                 if len(sorted_stocks_info)<=5:
                     return jsonify({'status': 'success', 'topFive': sorted_stocks_info})
                 else:
@@ -378,8 +380,7 @@ def price():
             return jsonify({'status': 'failed', 'message': 'Stock code not found'})
         return jsonify({'status': 'success', 'price': price})
     return jsonify({'status': 'waiting for getting price'})
-            
-# 计算所有股票的总价值和balance的和
+
 @app.route('/home/total', methods=['GET', 'POST'])
 def total():
     if request.method == 'POST':
@@ -404,7 +405,7 @@ def total():
                     total+=price*stocks_held[stock_code]
                 return jsonify({'status': 'success', 'total': total})
     return jsonify({'status': 'waiting for getting total'})
-
+           
 @app.route('/home/risk-management')
 def risk_management():
     return jsonify({'message': 'risk-managemant'})
