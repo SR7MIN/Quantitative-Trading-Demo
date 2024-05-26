@@ -3,104 +3,136 @@
         <el-tabs v-model="activeName" type="card" class="demo-tabs" @tab-click="handleClick">
             <el-tab-pane label="账户信息" name="first">
                 <div>
-                    <el-card style="max-width: 480px; margin-bottom: 20px;">
-                        <template #header>
-                            <div class="card-header">
-                                <span>基本信息</span>
-                            </div>
-                        </template>
-                        <el-form ref="formRef" label-width="auto">
-                            <el-form-item label="昵称" prop="name">{{ user.name }}</el-form-item>
-                            <el-form-item label="账号" prop="zone">{{ user.account }}</el-form-item>
-                            <el-form-item label="密码" prop="zone">{{ user.password }}</el-form-item>
-                            <el-form-item label="邮箱" prop="time">您还没有绑定邮箱，
-                                <el-button type="text" @click="bind_email">去绑定</el-button>
-                            </el-form-item>
-                            <el-button type="primary" @click="change_name">想换个名字？</el-button>
-                        </el-form>
+                    <el-row>
+                        <el-col :span="12">
+                            <div class="grid-content ep-bg-purple" />
+                            <el-card style="max-width: 480px; margin-bottom: 20px;">
+                                <template #header>
+                                    <div class="card-header">
+                                        <span>基本信息</span>
+                                    </div>
+                                </template>
+                                <el-form ref="formRef" label-width="auto">
+                                    <el-form-item label="昵称" prop="name">{{ user.name }}</el-form-item>
+                                    <el-form-item label="账号" prop="zone">{{ user.account }}</el-form-item>
+                                    <el-form-item label="密码" prop="zone">{{ user.password }}</el-form-item>
+                                    <el-form-item label="邮箱" prop="time">您还没有绑定邮箱，
+                                        <el-button type="text" @click="bind_email">去绑定</el-button>
+                                    </el-form-item>
+                                    <el-button type="primary" @click="change_name">想换个名字？</el-button>
+                                </el-form>
 
-                    </el-card>
-                    <el-card style="max-width: 480px">
-                        <template #header>
-                            <div class="card-header">
-                                <span>账号安全</span>
-                            </div>
-                        </template>
-                        <el-row>
-                            您的账号安全等级：</br>
-                        </el-row>
-                        <div class="demo-progress">
-                            <!-- <el-progress :percentage="50" /> 想弄一个进度条，但是显示有些问题 -->
+                            </el-card>
+                        </el-col>
+                        <el-col :span="12">
+                            <div class="grid-content ep-bg-purple-light" />
+                            <el-card style="max-width: 480px">
+                                <template #header>
+                                    <div class="card-header">
+                                        <span>账号安全</span>
+                                    </div>
+                                </template>
+                                <el-row>
+                                    您的账号安全等级：</br>
+                                </el-row>
+                                <div class="demo-progress">
+                                    <el-progress :text-inside="true" :stroke-width="26"
+                                        :percentage=passwordSecurityLevel style="margin-top: 25px;" />
 
-                        </div>
-                        <el-button primary @click="dialogFormVisible = true">
-                            修改密码
-                        </el-button>
-                        <el-dialog v-model="dialogFormVisible" title="修改密码" width="500">
-                            <el-form :model="newPassword" :rules="rules">
-                                <el-form-item label="原密码" :label-width="formLabelWidth" prop="old">
-                                    <el-input v-model="newPassword.old" autocomplete="off" />
-                                </el-form-item>
-                                <el-form-item label="新密码" :label-width="formLabelWidth" prop="password2">
-                                    <el-input v-model="newPassword.new" autocomplete="off" />
-                                </el-form-item>
-                                <el-form-item label="确认密码" :label-width="formLabelWidth" prop="confirm">
-                                    <el-input v-model="newPassword.confirm" autocomplete="off" />
-                                </el-form-item>
-                            </el-form>
-                            <template #footer>
-                                <div class="dialog-footer">
-                                    <el-button @click="dialogFormVisible = false">Cancel</el-button>
-                                    <el-button type="primary" @click="submitPasswordChange">
-                                        Confirm
-                                    </el-button>
+                                </div>
+                                <el-button primary @click="dialogFormVisible = true" style="margin-top: 15px;">
+                                    修改密码
+                                </el-button>
+                                <el-dialog v-model="dialogFormVisible" title="修改密码" width="500">
+                                    <el-form :model="newPassword" :rules="rules">
+                                        <el-form-item label="原密码" :label-width="formLabelWidth" prop="old">
+                                            <el-input v-model="newPassword.old" autocomplete="off" />
+                                        </el-form-item>
+                                        <el-form-item label="新密码" :label-width="formLabelWidth" prop="password2">
+                                            <el-input v-model="newPassword.new" autocomplete="off" />
+                                        </el-form-item>
+                                        <el-form-item label="确认密码" :label-width="formLabelWidth" prop="confirm">
+                                            <el-input v-model="newPassword.confirm" autocomplete="off" />
+                                        </el-form-item>
+                                    </el-form>
+                                    <template #footer>
+                                        <div class="dialog-footer">
+                                            <el-button @click="dialogFormVisible = false">Cancel</el-button>
+                                            <el-button type="primary" @click="submitPasswordChange">
+                                                Confirm
+                                            </el-button>
+                                        </div>
+                                    </template>
+                                </el-dialog>
+
+                            </el-card>
+                        </el-col>
+                    </el-row>
+                </div>
+            </el-tab-pane>
+            <el-tab-pane label="财务管理" name="third">
+                <el-row>
+                    <el-col :span="12">
+                        <el-card style="max-width: 480px; margin-bottom: 20px;">
+                            <template #header>
+                                <div class="card-header">
+                                    <span>余额信息</span>
                                 </div>
                             </template>
-                        </el-dialog>
+                            <el-form ref="formRef" label-width="auto">
+                                <el-form-item label="您的余额为：">{{ user.balance }}</el-form-item>
+                                <el-form-item>
+                                    担心余额不足？想拥有更好体验？<br>
+                                    请点击下方按钮进行充值！<br>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button type="success" round @click="rechargeDialog = true"
+                                        style="width: 200px;">充值</el-button>
+                                    <el-dialog v-model="rechargeDialog" title="充值界面" width="500">
+                                        <span>请扫描以下二维码完成支付：</span>
+                                        <img src="../assets/付款码.jpg" alt="Payment QR Code" style="width: 100%;">
+                                        <el-form :model="form">
+                                            <el-form-item label="请输入充值金额" :label-width="formLabelWidth">
+                                                <el-input v-model="form.sum" autocomplete="off" />
+                                            </el-form-item>
+                                        </el-form>
+                                        <template #footer>
+                                            <div class="dialog-footer">
+                                                <el-button @click="rechargeDialog = false">取消</el-button>
+                                                <el-button type="primary" @click="recharge">
+                                                    确认
+                                                </el-button>
+                                            </div>
+                                        </template>
+                                    </el-dialog>
+                                </el-form-item>
+                            </el-form>
+                        </el-card>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-card style="max-width: 480px; margin-bottom: 20px;">
+                            <template #header>
+                                <div class="card-header">
+                                    <span>持股信息</span>
+                                </div>
+                            </template>
+                            <el-form ref="formRef" label-width="auto">
+                                <el-form-item label="您的总资产为：">{{ user.all_property }}</el-form-item>
+                                <el-form-item>
+                                    您的资产分布如下表：<br>
+                                </el-form-item>
 
-                    </el-card>
-                </div>
-            </el-tab-pane>
-            <el-tab-pane label="我的收藏" name="second">
-                <h1>
-                    收藏的股票：
-                </h1>
-            </el-tab-pane>
-            <el-tab-pane label="余额管理" name="third">
-                <div>
-                    您的现有余额为：{{ user.balance }}
-                </div>
-                <div>
-                    担心余额不足？想拥有更好体验？<br>
-                    请点击下方按钮进行充值！<br>
-
-                    <el-button type="success" round @click="rechargeDialog = true" 
-                    style="width: 200px;">充值</el-button>
-                    <el-dialog v-model="rechargeDialog" title="充值界面" width="500">
-                        <span>请扫描以下二维码完成支付：</span>
-                        <img src="../assets/付款码.jpg" alt="Payment QR Code" style="width: 100%;">
-                        <el-form :model="form">
-                            <el-form-item label="请输入充值金额" :label-width="formLabelWidth">
-                                <el-input v-model="form.sum" autocomplete="off" />
-                            </el-form-item>
-                        </el-form>
-                        <template #footer>
-                            <div class="dialog-footer">
-                                <el-button @click="rechargeDialog = false">取消</el-button>
-                                <el-button type="primary" @click="recharge">
-                                    确认
-                                </el-button>
-                            </div>
-                        </template>
-                    </el-dialog>
-                </div>
+                            </el-form>
+                        </el-card>
+                    </el-col>
+                </el-row>
             </el-tab-pane>
         </el-tabs>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useStorage } from '@vueuse/core';
 import axios from 'axios'; // 导入 axios 库，用于发送 HTTP 请求
 const format = (percentage) => (percentage === 100 ? 'Full' : `${percentage}%`)
@@ -109,6 +141,7 @@ const newPassword = reactive({
     new: '',
     confirm: '',
 })
+let passwordSecurityLevel = ref(0);
 const user = useStorage('user', ({
     name: '',
     remember: false,
@@ -118,6 +151,41 @@ const user = useStorage('user', ({
     all_property: 0,
     stocks_held: undefined,
 }));
+// 搞一个简单规则，根据密码长度和复杂度来判断安全等级
+function getPasswordSecurityLevel(password) {
+    let score = 0;
+
+    if (!password)
+        return score;
+
+    // award every unique letter until 5 repetitions
+    let letters = new Object();
+    for (let i = 0; i < password.length; i++) {
+        letters[password[i]] = (letters[password[i]] || 0) + 1;
+        score += 5.0 / letters[password[i]];
+    }
+
+    // bonus points for mixing it up
+    let variations = {
+        digits: /\d/.test(password),
+        lower: /[a-z]/.test(password),
+        upper: /[A-Z]/.test(password),
+        nonWords: /\W/.test(password),
+    }
+
+    let variationCount = 0;
+    for (let check in variations) {
+        variationCount += (variations[check] == true) ? 1 : 0;
+    }
+    score += (variationCount - 1) * 10;
+
+    return parseInt(score);
+}
+
+onMounted(() => {
+    passwordSecurityLevel.value = getPasswordSecurityLevel(user.value.password);
+});
+
 const form = reactive({
     sum: undefined,
     account: '',
@@ -262,6 +330,7 @@ const submitPasswordChange = async () => {
                 message: '密码修改成功',
             });
             user.value.password = newPassword.new;
+            passwordSecurityLevel.value = getPasswordSecurityLevel(user.value.password);
         }
         else {
             ElMessage({
@@ -279,6 +348,7 @@ const submitPasswordChange = async () => {
     dialogFormVisible.value = false;
 };
 </script>
+
 
 <style lang="scss" scoped>
 .demo-progress .el-progress--line {

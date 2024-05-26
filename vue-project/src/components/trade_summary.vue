@@ -23,7 +23,7 @@
             <el-table-column prop="1.0" label="股票名称" />
             <el-table-column prop="1.1" label="单股价格"  />
             <el-table-column prop="1.2" label="持有数量" />
-            <el-table-column prop="1.3" label="总价值" />
+            <el-table-column prop="1.3" label="总价值" sortable/>
         </el-table>
       </div>
     </el-col>

@@ -5,7 +5,8 @@
                 <Plus />
             </el-icon>
             &nbsp;&nbsp;交易</el-button>
-        <el-drawer v-model="dialog" title="请输入您想进行的交易" :before-close="handleClose" direction="rtl" class="demo-drawer">
+        <el-drawer v-model="dialog" title="请输入您想进行的交易" 
+        :before-close="handleClose" direction="rtl" class="demo-drawer1">
             <div class="demo-drawer__content">
                 <el-form :model="form">
                     <el-form-item label="股票代码" :label-width="formLabelWidth">
@@ -19,9 +20,6 @@
                     </el-form-item>
                     <el-form-item label="选购股数" :label-width="formLabelWidth">
                         <el-input v-model="form.num" autocomplete="off" />
-                    </el-form-item>
-                    <el-form-item label="总价格" :label-width="formLabelWidth">
-                        bbbbb
                     </el-form-item>
                 </el-form>
                 <div class="demo-drawer__footer">
@@ -51,17 +49,15 @@
                     </el-button>
                     <el-drawer v-model="dialog2" title="请输入您想卖出的股数" 
                     :before-close="handleClose" 
-                    direction="rtl" class="demo-drawer" append-to-body>
+                    direction="rtl" class="demo-drawer" >
+                    <!-- :append-to-body="true" -->
             <div class="demo-drawer__content">
                 <el-form :model="form">
-                    <!-- <el-form-item label="股票代码" :label-width="formLabelWidth">
-                        <el-input v-model="form.code" autocomplete="off" />
-                    </el-form-item> -->
                     <el-form-item label="卖出股数" :label-width="formLabelWidth">
                         <el-input v-model="form.num" autocomplete="off" />
                     </el-form-item>
                     <el-form-item label="总收益" :label-width="formLabelWidth">
-                        aaaaa
+                        {{ totalIncome }}
                     </el-form-item>
                 </el-form>
                 <div class="demo-drawer__footer">
@@ -81,13 +77,13 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { useStorage } from '@vueuse/core';
+import { get, useStorage } from '@vueuse/core';
 import axios from 'axios';
 import { nextTick } from 'vue';
 
 const dialog = ref(false)
 const dialog2 = ref(false)
-const loading = ref(false)
+const loading = ref(false) 
 let timer
 const form = reactive({  //记录想进行交易的股票信息
     code: '',
@@ -113,7 +109,25 @@ const stock_history = reactive({
 const openSellDialog = (row) => {
     form.code = row.stock_code;
     dialog2.value = true;
+    get_now_price();
 }
+async function get_now_price() { // 获取当前股票价格
+    const path = 'http://localhost:5000/home/price';
+    try {
+        const res = await axios.post(path, form);
+        if (res.data.status === "success") {
+            form.price = res.data.price;
+            console.log('获取当前股票价格成功');
+            console.log(form.price);
+        } else {
+            console.error('获取当前股票价格失败');
+        }
+    } catch (error) {
+        console.error(error);
+        console.error('网络问题，获取当前股票价格失败，请重试');
+    }
+}
+let totalIncome = computed(() => form.num * form.price);
 async function sell_stock() {
     const path = 'http://localhost:5000/home/sell';
     form.account = user.value.account;
@@ -177,7 +191,7 @@ onMounted(() => {
 const typeFormatter = (row) => {
     return row.type === 'buy' ? '买入' : '卖出';
 }
-const totalAmountFormatter = (row) => {
+const totalAmountFormatter = (row) => { 
     return (row.price * row.num).toFixed(2);
 }
 const sortTotalAmount = (a, b) => {
@@ -239,13 +253,16 @@ const cancelForm = () => {
 </script>
 
 <style lang="scss" scoped>
-.el-drawer__open .el-dialog__wrapper {
-    background-color: transparent !important;
-}
-.v-modal {
-    background-color: transparent !important;
-}
-.el-drawer__open .el-overlay {
-    background-color: transparent !important;
-}
+// .el-drawer__open .el-dialog__wrapper {
+//     background-color: transparent !important;
+// }
+// .v-modal {
+//     background-color: transparent !important;
+// }
+// .el-drawer__open .el-overlay {
+//     background-color: transparent !important;
+// }
+// .demo-drawer {
+//     background-color: transparent !important;
+// }
 </style>

@@ -1,11 +1,61 @@
 <template>
-    <div>
-        可查询港股的全部股票信息
-        <el-button type="primary" @click="Search_stock">
-            <el-icon>
-                <Search />
-            </el-icon>
-            股票查询</el-button>
+    <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+        <div>
+            可查询港股的全部股票信息
+            <el-button type="primary" @click="Search_stock">
+                <el-icon>
+                    <Search />
+                </el-icon>
+                股票查询
+            </el-button>
+        </div>
+        <div>
+            <el-button type="success" @click="dialog = true" v-show="stockQueried">
+                买入
+            </el-button>
+            <el-drawer v-model="dialog" title="请输入您的交易信息" :before-close="handleClose" direction="rtl"
+                class="demo-drawer1">
+                <div class="demo-drawer__content">
+                    <el-form :model="form">
+                        <el-form-item label="选购股数" :label-width="formLabelWidth">
+                            <el-input v-model="form.num" autocomplete="off" />
+                        </el-form-item>
+                        <el-form-item label="总价格" :label-width="formLabelWidth">
+                            {{ totalOutcome }}
+                        </el-form-item>
+                    </el-form>
+                    <div class="demo-drawer__footer">
+                        <el-button @click="cancelForm">取消交易</el-button>
+                        <el-button type="primary" :loading="loading" @click="onClick">
+                            {{ loading ? 'Submitting ...' : '提交交易' }}
+                        </el-button>
+                    </div>
+                </div>
+            </el-drawer>
+            <el-button type="danger" @click="dialog2 = true" v-show="stockQueried">
+                卖出
+            </el-button>
+            <el-drawer v-model="dialog2" title="请输入您的交易信息" :before-close="handleClose" direction="rtl"
+                class="demo-drawer">
+                <!-- :append-to-body="true" -->
+                <div class="demo-drawer__content">
+                    <el-form :model="form">
+                        <el-form-item label="卖出股数" :label-width="formLabelWidth">
+                            <el-input v-model="form.num" autocomplete="off" />
+                        </el-form-item>
+                        <el-form-item label="总收益" :label-width="formLabelWidth">
+                            {{ totalIncome }}
+                        </el-form-item>
+                    </el-form>
+                    <div class="demo-drawer__footer">
+                        <el-button @click="cancelForm">取消交易</el-button>
+                        <el-button type="primary" :loading="loading" @click="onClick2">
+                            {{ loading ? 'Submitting ...' : '提交交易' }}
+                        </el-button>
+                    </div>
+                </div>
+            </el-drawer>
+        </div>
     </div>
     <div>
         <el-row>
@@ -56,12 +106,15 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed} from 'vue';
 import axios from 'axios';
 import * as echarts from 'echarts';
-import { ElLoading, ElMessage, ElMessageBox } from 'element-plus';
+// import { ElLoading, ElMessage, ElMessageBox } from 'element-plus';
 import { onMounted } from 'vue';
+import { useStorage } from '@vueuse/core';
 let chart = null;
+let stockQueried = ref(false); //是否查询到了股票
+
 const chartRef = ref(null);
 let chart2 = null;
 const chartRef2 = ref(null);
@@ -75,14 +128,122 @@ let recentData2 = reactive({ //近60天历史数据，用来画K线图
     value: [],
     // 里面包括60天的日期 开盘 收盘 最高 最低 成交量 成交额 振幅 涨跌幅 涨跌额 换手率
 });
-const stock = reactive({
+
+const user = useStorage('user', ({
+    name: '',
+    remember: false,
+    password: '',
+    account: '',
+    balance: 1000000,
+    all_property: 0,
+    stocks_held: undefined,
+}));
+const form = reactive({  //记录想进行交易的股票信息
+    code: '',
+    place: '',
+    num: 0,
+    account: undefined,
+    price: undefined
+})
+let totalIncome = computed(() => form.num * form.price);
+let totalOutcome = computed(() => form.num * form.price);
+const dialog = ref(false) //买入弹窗
+const dialog2 = ref(false) //卖出弹窗
+const loading = ref(false)
+const stock = reactive({ //记录查询到的股票信息
     code: '',
     name: '',
     data: ''
 })
-// async function delay(ms) {
-//     return new Promise(resolve => setTimeout(resolve, ms));
-// }
+const onClick = () => {
+    buy_stock()
+    loading.value = true
+    setTimeout(() => {
+        loading.value = false
+        dialog.value = false
+        dialog2.value = false
+    }, 400)
+}
+const onClick2 = () => {
+    sell_stock()
+    loading.value = true
+    setTimeout(() => {
+        loading.value = false
+        dialog.value = false
+        dialog2.value = false
+    }, 400)
+}
+async function sell_stock() {
+    const path = 'http://localhost:5000/home/sell';
+    form.code = stock.code;
+    form.account = user.value.account;
+    try {
+        const res = await axios.post(path, form);
+        if (res.data.status === "success") {
+            ElMessage.success('交易成功');
+            user.value.balance = res.data.balance;
+        } else {
+
+            ElMessage.error('交易失败，卖出的股票超过拥有量');
+        }
+    } catch (error) {
+        console.error(error);
+        ElMessage.error('网络问题，交易失败，请重试222');
+    }
+}
+async function buy_stock() { // 购买
+    const path = 'http://localhost:5000/home/buy';
+    form.code = stock.code;
+    form.account = user.value.account;
+    try {
+        const res = await axios.post(path, form);
+        if (res.data.status === "success") {
+            ElMessage.success('交易成功');
+            user.value.balance = res.data.balance;
+        } else {
+            // handle login failure
+            console.error('Login failed');
+            ElMessage.error('交易失败，余额不足');
+        }
+    } catch (error) {
+        console.error(error);
+        ElMessage.error('网络问题，交易失败，请重试222');
+    }
+}
+const handleClose = (done) => {
+    if (loading.value) {
+        return
+    }
+    ElMessageBox.confirm('强制退出会放弃此次交易，是否继续？', {
+        confirmButtonText: '是',
+        cancelButtonText: '否',
+    })
+        .then(() => {
+            loading.value = false
+            dialog.value = false
+            dialog2.value = false
+            clearTimeout(timer)
+            form.code = '';
+            form.place = '';
+            form.num = undefined;
+            form.price = undefined;
+            done();
+        })
+        .catch(() => {
+            // catch error
+        })
+}
+
+const cancelForm = () => {
+    loading.value = false
+    dialog.value = false
+    dialog2.value = false
+    clearTimeout(timer)
+    form.code = '';
+    form.place = '';
+    form.num = undefined;
+    form.price = undefined;
+}
 const Search_stock = () => {
     const loading = ElLoading.service({ lock: true, fullscreen: true, text: "正在查询中..." });
     ElMessageBox.prompt('请输入您要查询的股票代码', 'Tip', {
@@ -103,6 +264,7 @@ const Search_stock = () => {
                         type: 'success',
                         message: `股票查询成功！`,
                     });
+                    stockQueried.value = true;
                     stock.code = value;
                     stock.name = res.data.stock_name;
                     stock.data = res.data.data;
@@ -110,6 +272,8 @@ const Search_stock = () => {
                     recentData2.value = stock.data.slice(-60);
                     todayData.value = res.data.all_info;
                     console.log(todayData.value);
+                    form.price = todayData.value[0].最新价;
+                    console.log(form.price);
                     // 这里你可以处理response.data.data，它包含了股票数据
 
                     // 使用ECharts绘制图表
@@ -213,6 +377,7 @@ const Search_stock = () => {
                     });
                 }
             } catch (error) {
+                stockQueried.value = false;
                 loading.close();
                 ElMessage({
                     type: 'error',
@@ -222,6 +387,7 @@ const Search_stock = () => {
             }
         })
         .catch(() => {
+            stockQueried.value = false;
             loading.close();
             ElMessage({
                 type: 'info',
