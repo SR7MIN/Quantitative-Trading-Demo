@@ -72,17 +72,18 @@ def login():
                 stocks_held=json.loads(stocks_held)
             else:
                 stocks_held={}
-            stocks_info={}
-            for stock_code in stocks_held:
-                x=get_stock_all_info(stock_code)
-                name=x['名称'].values[0]
-                price=x['最新价'].values[0]
-                stocks_info[stock_code]=[name, price, stocks_held[stock_code], price*stocks_held[stock_code]]
+            # stocks_info={}
+            # for stock_code in stocks_held:
+            #     x=get_stock_all_info(stock_code)
+            #     name=x['名称'].values[0]
+            #     price=x['最新价'].values[0]
+            #     stocks_info[stock_code]=[name, price, stocks_held[stock_code], price*stocks_held[stock_code]]
             if history is None:
                 history=[]
             else:
                 history=json.loads(history)
-            return jsonify({'status': 'success', 'nickname': result2['nickname'], 'history': history, 'balance': balance, 'stocks_info': stocks_info})
+            # return jsonify({'status': 'success', 'nickname': result2['nickname'], 'history': history, 'balance': balance, 'stocks_info': stocks_info})
+            return jsonify({'status': 'success', 'nickname': result2['nickname'], 'history': history, 'balance': balance})
         else:
             return jsonify({'status': 'failed', 'message': 'Login not successful'})
     return jsonify({'status': 'waiting for login'})
