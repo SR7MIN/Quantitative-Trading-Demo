@@ -11,6 +11,7 @@ from flask_cors import CORS
 import matplotlib.pyplot as plt
 import io
 import base64
+import akshare as ak
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
@@ -67,11 +68,16 @@ def login():
             cur.execute("SELECT stocks_held FROM users WHERE username = %s", (currentUser.username,))
             result5 = cur.fetchone()
             stocks_held=result5['stocks_held']
-            stocks_held=json.loads(stocks_held)
+            if stocks_held is not None:
+                stocks_held=json.loads(stocks_held)
+            else:
+                stocks_held={}
             stocks_info={}
             for stock_code in stocks_held:
-                price=get_stock_current_price(stock_code)
-                stocks_info[stock_code]=[get_stock_name(stock_code), price, stocks_held[stock_code], price*stocks_held[stock_code]]
+                x=get_stock_all_info(stock_code)
+                name=x['名称'].values[0]
+                price=x['最新价'].values[0]
+                stocks_info[stock_code]=[name, price, stocks_held[stock_code], price*stocks_held[stock_code]]
             if history is None:
                 history=[]
             else:
@@ -201,7 +207,6 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
         num=int(userDetails['num'])
         print(type(num))
         account=userDetails['account']
-        place=userDetails['place']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
         if result > 0:#接下来要select balance and stocks_held 前者是float 后者是json
@@ -211,7 +216,7 @@ def buy(): #交易执行 获取的json格式为{"code":int, "num":int ,"account"
             cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
             result3 = cur.fetchone()
             stocks_held=result3['stocks_held']
-            price=get_stock_current_price(stock_code,place)
+            price=get_stock_current_price(stock_code)
             if price==0:
                 print("股票代码未找到")
                 return jsonify({'status': 'failed', 'message': 'Stock code not found'})
@@ -406,6 +411,42 @@ def total():
                 return jsonify({'status': 'success', 'total': total})
     return jsonify({'status': 'waiting for getting total'})
            
+@app.route('/home/foreign-exchange', methods=['GET', 'POST']) # 外汇
+def foreign_exchange():
+    if request.method == 'POST':
+        return jsonify({'status': 'success', 'data': ak.currency_boc_safe().to_json(orient='records')})
+    return jsonify({'status': 'waiting for getting foreign exchange'})
+
+@app.route('/home/today-and-yesterday', methods=['GET', 'POST']) # 获取持股的当前总价值和昨天收盘时的总价值，以及总价值的涨跌幅
+def today_and_yesterday():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT balance FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            balance=result2['balance']
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+            result3 = cur.fetchone()
+            stocks_held=result3['stocks_held']
+            if stocks_held is None:
+                return jsonify({'status': 'success', 'today': balance, 'yesterday': balance, 'change': 0})
+            else:
+                stocks_held=json.loads(stocks_held)
+                today=0
+                yesterday=0
+                for stock_code in stocks_held:
+                    price=get_stock_current_price(stock_code)
+                    today+=price*stocks_held[stock_code]
+                for stock_code in stocks_held:
+                    price=get_stock_data(stock_code)['收盘'].values[-1]
+                    yesterday+=price*stocks_held[stock_code]
+                change=100*(today-yesterday)/yesterday
+                return jsonify({'status': 'success', 'today': today, 'yesterday': yesterday, 'change(%)': change})
+    return jsonify({'status': 'waiting for getting today and yesterday'})
+
 @app.route('/home/risk-management')
 def risk_management():
     return jsonify({'message': 'risk-managemant'})
