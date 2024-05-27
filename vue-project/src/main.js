@@ -6,7 +6,6 @@ import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import request from './utils/request'
 
-
 // request.get('/hello').then(res => {
 //   console.log(res)
 // })

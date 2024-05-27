@@ -1,13 +1,7 @@
 <template>
-    <div>
-        进行盈亏分析
-    </div>
+  <div>进行盈亏分析</div>
 </template>
 
-<script setup>
+<script setup></script>
 
-</script>
-
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

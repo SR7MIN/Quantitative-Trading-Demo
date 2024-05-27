@@ -1,14 +1,7 @@
 <template>
-    <div>
-        展示期货市场
-        
-    </div>
+  <div>展示期货市场</div>
 </template>
 
-<script setup>
+<script setup></script>
 
-</script>
-
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

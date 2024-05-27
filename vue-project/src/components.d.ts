@@ -63,4 +63,7 @@ declare module 'vue' {
     Trade_summary: typeof import('./components/trade_summary.vue')['default']
     User_setting: typeof import('./components/user_setting.vue')['default']
   }
+  export interface ComponentCustomProperties {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
+  }
 }

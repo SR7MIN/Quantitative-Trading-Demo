@@ -1,13 +1,7 @@
 <template>
-    <div>
-        风险管理
-    </div>
+  <div>风险管理</div>
 </template>
 
-<script setup>
+<script setup></script>
 
-</script>
-
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

@@ -1,13 +1,7 @@
 <template>
-    <div>
-        量化策略
-    </div>
+  <div>量化策略</div>
 </template>
 
-<script setup>
+<script setup></script>
 
-</script>
-
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>
