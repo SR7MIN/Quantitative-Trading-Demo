@@ -2,8 +2,15 @@
   <el-row>
     <el-col :span="12">
       <div class="grid-content ep-bg-purple">
-        <h1>策略概览</h1>
-        <h1>组合绩效</h1>
+        <div>
+          <h1>策略概览</h1>
+          今日资产：{{ compare.today }}<br />
+          昨日资产：{{ compare.yesterday }}<br />
+          涨跌幅：{{ compare.percent }}<br />
+        </div>
+        <div>
+          <h1>组合绩效</h1>
+        </div>
       </div>
     </el-col>
     <el-col :span="12">
@@ -54,15 +61,31 @@ const all_property = reactive({
 const total = computed(() =>
   Object.values(all_property).reduce((a, b) => a + b, 0)
 )
-// const tableData = reactive([
-//   { type: 'A股', money: all_property.A股, percent: computed(() => (all_property.A股 / total.value * 100).toFixed(2) + '%') },
-//   { type: '美股', money: all_property.美股, percent: computed(() => (all_property.美股 / total.value * 100).toFixed(2) + '%') },
-//   { type: '港股', money: all_property.港股, percent: computed(() => (all_property.港股 / total.value * 100).toFixed(2) + '%') },
-// ]);
+
 const topfive = ref([]);
-
+const compare = useStorage('compare',{
+  today: 0,
+  yesterday: 0,
+  percent: 0,
+})
 const isLoading = computed(() => topfive.value.length === 0);
-
+async function get_compare(){ //获取今日和昨日总资产的价值
+  const path = 'http://localhost:5000/home/today-and-yesterday'
+  try {
+    const res = await axios.post(path, user.value)
+    if (res.data.status === 'success') {
+      compare.value.today = res.data.today
+      compare.value.yesterday = res.data.yesterday
+      compare.value.percent = res.data.change
+      console.log('获取今日和昨日总资产的价值成功')
+    } else {
+      console.error('获取今日和昨日总资产的价值失败')
+    }
+  } catch (error) {
+    console.error(error)
+    console.error('网络问题，获取今日和昨日总资产的价值失败，请重试')
+  }
+}
 async function get_topfive() {
   // 获取前五大持仓
   const path = 'http://localhost:5000/home/topFive'
@@ -84,6 +107,7 @@ async function get_topfive() {
 //     get_topfive()
 // })
 onMounted(async () => {
+  await get_compare()
   await get_topfive()
   const chart = echarts.init(chartRef.value)
   console.log(topfive.value);
