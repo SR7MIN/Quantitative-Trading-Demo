@@ -41,7 +41,7 @@
                             <el-icon>
                                 <document />
                             </el-icon>
-                            <span>风险管理</span>
+                            <span>回测结果</span>
                         </el-menu-item>
                         <el-menu-item index="4" @click="switch3">
                             <el-icon>

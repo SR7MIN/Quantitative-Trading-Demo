@@ -36,6 +36,8 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sign_up: typeof import('./components/sign_up.vue')['default']
+    Simelat: typeof import('./components/simelat.vue')['default']
+    Simulate: typeof import('./components/simulate.vue')['default']
     Strategy: typeof import('./components/strategy.vue')['default']
     StrategyEditor: typeof import('./components/StrategyEditor.vue')['default']
     User_setting: typeof import('./components/user_setting.vue')['default']
