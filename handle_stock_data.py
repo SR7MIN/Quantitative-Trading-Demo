@@ -5,9 +5,9 @@ import datetime
 import akshare as ak
 import os
 import time
-import datetime
 import pytz
 import json
+import pandas as pd
 
 def save_plot(stock_data, stock_code):
     try:
@@ -112,3 +112,16 @@ def get_beijing_time():
     beijing_time = utc_time.replace(tzinfo=pytz.utc).astimezone(beijing_tz)
     formatted_beijing_time = beijing_time.strftime('%Y-%m-%d %H:%M:%S')
     return formatted_beijing_time
+
+def get_yesterday_price(stock_code):
+    stock_code=str(stock_code)
+    try:
+        start_date = (datetime.datetime.today() - pd.Timedelta(days=1)).strftime('%Y%m%d')
+        if len(stock_code) == 5:
+            stock_data = ak.stock_hk_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=start_date, adjust="qfq")['收盘'].values[0]
+        else:
+            stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=start_date, adjust="qfq")['收盘'].values[0]
+        return stock_data
+    except Exception as e:
+        return f"获取数据失败: {str(e)}"
+    

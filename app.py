@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Flask, request, session, jsonify, Response, redirect, url_for, send_file
 from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
-from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name, get_beijing_time, get_stock_all_info
+from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name, get_beijing_time, get_stock_all_info, get_yesterday_price
 import json
 from datetime import datetime
 from flask_cors import CORS
@@ -415,7 +415,10 @@ def total():
 @app.route('/home/foreign-exchange', methods=['GET', 'POST']) # 外汇
 def foreign_exchange():
     if request.method == 'POST':
-        return jsonify({'status': 'success', 'data': ak.currency_boc_safe().to_json(orient='records')})
+        selected_columns=['日期','美元','欧元','日元','港元','英镑','澳元','卢布']
+        df_dataframe=ak.currency_boc_safe()
+        df_selected=df_dataframe[selected_columns].tail(365)
+        return jsonify({'status': 'success', 'data': df_selected.to_dict(orient='records')})
     return jsonify({'status': 'waiting for getting foreign exchange'})
 
 @app.route('/home/today-and-yesterday', methods=['GET', 'POST']) # 获取持股的当前总价值和昨天收盘时的总价值，以及总价值的涨跌幅
@@ -429,28 +432,77 @@ def today_and_yesterday():
             cur.execute("SELECT balance FROM users WHERE username = %s", (account,))
             result2 = cur.fetchone()
             balance=result2['balance']
+            today=balance
             cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
             result3 = cur.fetchone()
             stocks_held=result3['stocks_held']
+            cur.execute("SELECT yesterdayTotal FROM users WHERE username = %s", (account,))
+            result3 = cur.fetchone()
+            yesterday=json.loads(result3['yesterdayTotal'])[list(json.loads(result3['yesterdayTotal']).keys())[-1]]
             if stocks_held is None:
                 return jsonify({'status': 'success', 'today': balance, 'yesterday': balance, 'change': 0})
             else:
                 stocks_held=json.loads(stocks_held)
-                today=0
-                yesterday=0
                 for stock_code in stocks_held:
                     price=get_stock_current_price(stock_code)
                     today+=price*stocks_held[stock_code]
-                for stock_code in stocks_held:
-                    price=get_stock_data(stock_code)['收盘'].values[-1]
-                    yesterday+=price*stocks_held[stock_code]
-                change=100*(today-yesterday)/yesterday
-                return jsonify({'status': 'success', 'today': today, 'yesterday': yesterday, 'change(%)': change})
+                change=(today-yesterday)/yesterday
+                return jsonify({'status': 'success', 'today': today, 'yesterday': yesterday, 'change': change})
     return jsonify({'status': 'waiting for getting today and yesterday'})
 
-@app.route('/home/risk-management')
-def risk_management():
-    return jsonify({'message': 'risk-managemant'})
+@app.route('/home/held-stock', methods=['GET', 'POST'])# 给出每只所持有股票的详细信息
+def held_stock():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        account=userDetails['account']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+            result2 = cur.fetchone()
+            stocks_held=result2['stocks_held']
+            if stocks_held is None:
+                return jsonify({'status': 'success', 'stocks': {}})
+            else:
+                stocks_held=json.loads(stocks_held)
+                stocks_info={}
+                for stock_code in stocks_held:
+                    stocks_info[stock_code]=get_stock_all_info(stock_code).to_dict(orient='records')[0]
+                return jsonify({'status': 'success', 'stocks': stocks_info})
+    return jsonify({'status': 'waiting for getting held stock'})
+
+def prework():#搜索数据库中yesterdayTotal这一列是否包含了昨天收盘时的总价值
+    with app.app_context():
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute("SELECT * FROM users")
+        result = cur.fetchall()
+        for user in result:
+            cur.execute("SELECT yesterdayTotal FROM users WHERE username = %s", (user['username'],))
+            result2 = cur.fetchone()
+            ytotal=result2['yesterdayTotal']
+            if ytotal is not None:
+                ytotal=json.loads(ytotal)
+            else:
+                ytotal={}
+            if ytotal=={} or list(ytotal.keys())[-1]!=(datetime.now() - pd.Timedelta(days=1)).strftime('%Y-%m-%d'):
+                cur.execute("SELECT stocks_held FROM users WHERE username = %s", (user['username'],))
+                result3 = cur.fetchone()
+                stocks_held=result3['stocks_held']
+                cur.execute("SELECT balance FROM users WHERE username = %s", (user['username'],))
+                result4 = cur.fetchone()
+                total=result4['balance']
+                print(total)
+                if stocks_held is not None:
+                    stocks_held=json.loads(stocks_held)
+                    for stock_code in stocks_held:
+                        price=get_yesterday_price(stock_code)
+                        total+=price*stocks_held[stock_code]
+                    ytotal[(datetime.now() - pd.Timedelta(days=1)).strftime('%Y-%m-%d')]=total
+                    cur.execute("UPDATE users SET yesterdayTotal = %s WHERE username = %s", (json.dumps(ytotal), user['username']))
+                    mysql.connection.commit()
+        cur.close()
+
 
 if __name__ == '__main__':
+    prework()
     app.run(debug=True)
