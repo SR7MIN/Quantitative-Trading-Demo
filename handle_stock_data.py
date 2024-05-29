@@ -125,3 +125,9 @@ def get_yesterday_price(stock_code):
     except Exception as e:
         return f"获取数据失败: {str(e)}"
     
+# print最近一天的数据
+a=get_stock_all_info('688031')
+print(a['代码'].values[0])
+print(a['名称'].values[0])  
+print(a['最新价'].values[0])
+print(a['涨跌幅'].values[0])

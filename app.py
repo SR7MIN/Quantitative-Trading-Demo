@@ -446,7 +446,7 @@ def today_and_yesterday():
                 for stock_code in stocks_held:
                     price=get_stock_current_price(stock_code)
                     today+=price*stocks_held[stock_code]
-                change=(today-yesterday)/yesterday
+                change=100*(today-yesterday)/yesterday
                 return jsonify({'status': 'success', 'today': today, 'yesterday': yesterday, 'change': change})
     return jsonify({'status': 'waiting for getting today and yesterday'})
 
@@ -463,12 +463,16 @@ def held_stock():
             stocks_held=result2['stocks_held']
             if stocks_held is None:
                 return jsonify({'status': 'success', 'stocks': {}})
-            else:
+            else:# 返回股票代码 股票名称 持有数目 单股价格 涨跌幅
                 stocks_held=json.loads(stocks_held)
                 stocks_info={}
                 for stock_code in stocks_held:
-                    stocks_info[stock_code]=get_stock_all_info(stock_code).to_dict(orient='records')[0]
-                return jsonify({'status': 'success', 'stocks': stocks_info})
+                    info=get_stock_all_info(stock_code)
+                    price=info['最新价'].values[0]
+                    change=info['涨跌幅'].values[0]
+                    name=info['名称'].values[0]
+                    stocks_info[stock_code]=[stock_code, name, stocks_held[stock_code], price, change]
+                return jsonify({'status': 'success', 'stocks_info': stocks_info})
     return jsonify({'status': 'waiting for getting held stock'})
 
 def prework():#搜索数据库中yesterdayTotal这一列是否包含了昨天收盘时的总价值
@@ -501,6 +505,28 @@ def prework():#搜索数据库中yesterdayTotal这一列是否包含了昨天收
                     cur.execute("UPDATE users SET yesterdayTotal = %s WHERE username = %s", (json.dumps(ytotal), user['username']))
                     mysql.connection.commit()
         cur.close()
+
+@app.route('/home/test', methods=['GET', 'POST'])
+def test():
+    account='1257047642'
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+    if result > 0:
+        cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
+        result2 = cur.fetchone()
+        stocks_held=result2['stocks_held']
+        if stocks_held is None:
+            return jsonify({'status': 'success', 'stocks': {}})
+        else:# 返回股票代码 股票名称 持有数目 单股价格 涨跌幅
+            stocks_held=json.loads(stocks_held)
+            stocks_info={}
+            for stock_code in stocks_held:
+                info=get_stock_all_info(stock_code)
+                price=info['最新价'].values[0]
+                change=info['涨跌幅'].values[0]
+                name=info['名称'].values[0]
+                stocks_info[stock_code]=[stock_code, name, stocks_held[stock_code], price, change]
+            return jsonify({'status': 'success', 'stocks_info': stocks_info})
 
 
 if __name__ == '__main__':
