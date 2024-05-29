@@ -116,18 +116,13 @@ def get_beijing_time():
 def get_yesterday_price(stock_code):
     stock_code=str(stock_code)
     try:
-        start_date = (datetime.datetime.today() - pd.Timedelta(days=1)).strftime('%Y%m%d')
+        start_date = (datetime.datetime.today() - pd.Timedelta(days=30)).strftime('%Y%m%d')
+        end_date = (datetime.datetime.today() - pd.Timedelta(days=1)).strftime('%Y%m%d')
         if len(stock_code) == 5:
-            stock_data = ak.stock_hk_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=start_date, adjust="qfq")['收盘'].values[0]
+            stock_data = ak.stock_hk_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=end_date, adjust="qfq")['收盘'].values[-1]
         else:
-            stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=start_date, adjust="qfq")['收盘'].values[0]
+            stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", start_date=start_date, end_date=end_date, adjust="qfq")['收盘'].values[-1]
         return stock_data
     except Exception as e:
         return f"获取数据失败: {str(e)}"
     
-# print最近一天的数据
-a=get_stock_all_info('688031')
-print(a['代码'].values[0])
-print(a['名称'].values[0])  
-print(a['最新价'].values[0])
-print(a['涨跌幅'].values[0])
