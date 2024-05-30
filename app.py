@@ -438,7 +438,10 @@ def today_and_yesterday():
             stocks_held=result3['stocks_held']
             cur.execute("SELECT yesterdayTotal FROM users WHERE username = %s", (account,))
             result3 = cur.fetchone()
-            yesterday=json.loads(result3['yesterdayTotal'])[list(json.loads(result3['yesterdayTotal']).keys())[-1]]
+            if result3['yesterdayTotal'] is None:
+                yesterday=balance
+            else:
+                yesterday=json.loads(result3['yesterdayTotal'])[list(json.loads(result3['yesterdayTotal']).keys())[-1]]
             if stocks_held is None:
                 return jsonify({'status': 'success', 'today': balance, 'yesterday': balance, 'change': 0})
             else:
