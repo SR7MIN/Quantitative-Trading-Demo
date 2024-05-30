@@ -27,12 +27,12 @@
                   <el-form-item label="密码" prop="zone">{{
                     user.password
                   }}</el-form-item>
-                  <el-form-item label="邮箱" prop="time"
+                  <!-- <el-form-item label="邮箱" prop="time"
                     >您还没有绑定邮箱，
                     <el-button type="text" @click="bind_email"
                       >去绑定</el-button
                     >
-                  </el-form-item>
+                  </el-form-item> -->
                   <el-button type="primary" @click="change_name"
                     >想换个名字？</el-button
                   >
@@ -110,7 +110,7 @@
           </el-row>
         </div>
       </el-tab-pane>
-      <el-tab-pane label="财务管理" name="third">
+      <el-tab-pane label="财务管理与反馈" name="third">
         <el-row>
           <el-col :span="12">
             <el-card style="max-width: 480px; margin-bottom: 20px">
@@ -140,7 +140,7 @@
                     title="充值界面"
                     width="500"
                   >
-                    <span>请扫描以下二维码完成支付：</span>
+                    <span>如果你觉得我们的网页还不错，可以请作者喝杯奶茶：</span>
                     <img
                       src="../assets/付款码.jpg"
                       alt="Payment QR Code"
@@ -173,15 +173,16 @@
             <el-card style="max-width: 480px; margin-bottom: 20px">
               <template #header>
                 <div class="card-header">
-                  <span>持股信息</span>
+                  <span>您的意见</span>
                 </div>
               </template>
-              <el-form ref="formRef" label-width="auto">
-                <el-form-item label="您的总资产为：">{{
-                  user.all_property
-                }}</el-form-item>
-                <el-form-item> 您的资产分布如下表：<br /> </el-form-item>
-              </el-form>
+              我们渴望得到您的反馈和建议！<br />
+              <div style="margin-top: 15px;">
+                如您有任何改进意见或使用过程中遇到bug，欢迎及时反馈给我们！<br />
+              </div>
+              <div style="margin-top: 15px;">
+              <a href="https://github.com/SR7MIN/Quantitative-Trading-Demo" target="_blank">访问我们的 GitHub 仓库，提出评论或建议</a>
+              </div>
             </el-card>
           </el-col>
         </el-row>

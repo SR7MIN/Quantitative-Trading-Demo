@@ -61,63 +61,6 @@ async function get_rate() {
     console.error(error)
   }
 }
-// onMounted(async () => {
-//   await get_rate()
-
-//   const dates = rate.value.map(item => new Date(item.日期).toLocaleDateString())
-//   const usdRates = rate.value.map(item => item.美元)
-//   const eurRates = rate.value.map(item => item.欧元)
-//   const jpyRates = rate.value.map(item => item.日元)
-//   const gbpRates = rate.value.map(item => item.英镑)
-//   const hkdRates = rate.value.map(item => item.港元)
-//   const rusaRates = rate.value.map(item => item.卢布)
-
-//   const options = (min, max, title, data) => ({
-//     tooltip: {
-//       trigger: 'axis'
-//     },
-//     xAxis: {
-//       type: 'category',
-//       data: dates
-//     },
-//     yAxis: {
-//       type: 'value',
-//       min: min * 0.9,
-//       max: max * 1.1,
-//       axisLabel: {
-//         formatter: '{value:.2f}'
-//       }
-//     },
-//     title: {
-//       text: title
-//     },
-//     series: [
-//       {
-//         type: 'line',
-//         smooth: true,
-//         data: data
-//       }
-//     ]
-//   })
-
-//   const chart1 = echarts.init(document.getElementById('chartRef1'))
-//   chart1.setOption(options(Math.min(...usdRates), Math.max(...usdRates), '美元对人民币的中间价走势', usdRates))
-
-//   const chart2 = echarts.init(document.getElementById('chartRef2'))
-//   chart2.setOption(options(Math.min(...eurRates), Math.max(...eurRates), '欧元对人民币的中间价走势', eurRates))
-
-//   const chart3 = echarts.init(document.getElementById('chartRef3'))
-//   chart3.setOption(options(Math.min(...jpyRates), Math.max(...jpyRates), '日元对人民币的中间价走势', jpyRates))
-
-//   const chart4 = echarts.init(document.getElementById('chartRef4'))
-//   chart4.setOption(options(Math.min(...gbpRates), Math.max(...gbpRates), '英镑对人民币的中间价走势', gbpRates))
-
-//   const chart5 = echarts.init(document.getElementById('chartRef5'))
-//   chart5.setOption(options(Math.min(...hkdRates), Math.max(...hkdRates), '港元对人民币的中间价走势', hkdRates))
-
-//   const chart6 = echarts.init(document.getElementById('chartRef6'))
-//   chart6.setOption(options(Math.min(...rusaRates), Math.max(...rusaRates), '卢布对人民币的中间价走势', rusaRates))
-// })
 
 onMounted(
   async () => {

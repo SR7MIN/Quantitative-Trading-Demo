@@ -8,6 +8,7 @@
         </el-icon>
         股票查询
       </el-button>
+      （今日推荐股票：{{ good_stock[0]}} ）
     </div>
     <div>
       <el-button type="success" @click="dialog = true" v-show="stockQueried">
@@ -127,7 +128,12 @@ import { onMounted } from 'vue'
 import { useStorage } from '@vueuse/core'
 let chart = null
 let stockQueried = ref(false) //是否查询到了股票
-
+let randomNum = Math.floor(Math.random() * 3);
+const good_stock = ref([
+  ['301225','300684','603390'],
+])
+const topfive = useStorage('topfive', []
+) 
 const chartRef = ref(null)
 let chart2 = null
 const chartRef2 = ref(null)

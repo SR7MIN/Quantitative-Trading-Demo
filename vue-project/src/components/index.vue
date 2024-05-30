@@ -102,7 +102,7 @@
           </el-menu>
         </el-aside>
         <el-main>
-          <div>您的总资产为：{{ user.all_property }} (总资产=现金+持股)</div>
+          
           <RouterView />
         </el-main>
       </el-container>
@@ -111,7 +111,7 @@
 </template>
 
 <script setup>
-import { useStorage } from '@vueuse/core'
+import { get, useStorage } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
@@ -119,6 +119,12 @@ const route = useRouter()
 const isCollapse = ref(false)
 const handleLogout = () => {
   user.value = null
+  topfive.value = []
+  compare.value = {
+    today: 0,
+    yesterday: 0,
+    percent: 0,
+  }
   route.push('/login')
 }
 const user = useStorage('user', {
@@ -130,6 +136,46 @@ const user = useStorage('user', {
   all_property: 0,
   stocks_held: undefined,
 })
+const compare = useStorage('compare',{
+  today: 0,
+  yesterday: 0,
+  percent: 0,
+})
+const topfive = useStorage('topfive', [])
+async function get_topfive() {
+  // 获取前五大持仓
+  const path = 'http://localhost:5000/home/topFive'
+  try {
+    const res = await axios.post(path, user.value)
+    if (res.data.status === 'success') {
+      topfive.value = res.data.topFive
+      console.log('获取前五大持仓成功')
+      console.log(topfive.value)
+    } else {
+      console.error('获取前五大持仓失败')
+    }
+  } catch (error) {
+    console.error(error)
+    console.error('网络问题，获取前五大持仓失败，请重试')
+  }
+}
+async function get_compare(){ //获取今日和昨日总资产的价值
+  const path = 'http://localhost:5000/home/today-and-yesterday'
+  try {
+    const res = await axios.post(path, user.value)
+    if (res.data.status === 'success') {
+      compare.value.today = res.data.today
+      compare.value.yesterday = res.data.yesterday
+      compare.value.percent = res.data.change
+      console.log('获取今日和昨日总资产的价值成功')
+    } else {
+      console.error('获取今日和昨日总资产的价值失败')
+    }
+  } catch (error) {
+    console.error(error)
+    console.error('网络问题，获取今日和昨日总资产的价值失败，请重试')
+  }
+}
 async function get_all_property() {
   const path = 'http://localhost:5000/home/total'
   try {
@@ -148,6 +194,8 @@ async function get_all_property() {
 }
 onMounted(() => {
   get_all_property()
+  get_topfive()
+  get_compare()
 })
 // onMounted(async () => {
 //     try {
