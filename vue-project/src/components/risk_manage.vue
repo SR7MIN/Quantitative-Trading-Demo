@@ -48,27 +48,62 @@
     volatility: initialBacktestResults.volatility
   });
   
-  const fetchBacktestResults = async() => {
-    // 这里应该是API请求获取回测结果的逻辑
-    // 模拟API响应
-    const mockApiResponse = {
-      maxDrawdown: '4.8%',
-      sharpeRatio: '1.3',
-      volatility: '7.9%',
-      results: '更新后的回测结果详细文本...'
-    };
+  // const fetchBacktestResults = async() => {
+  //   // 这里应该是API请求获取回测结果的逻辑
+  //   // 模拟API响应
+  //   const mockApiResponse = {
+  //     maxDrawdown: '4.8%',
+  //     sharpeRatio: '1.3',
+  //     volatility: '7.9%',
+  //     results: '更新后的回测结果详细文本...'
+  //   };
     
-    backtestResults.value = mockApiResponse.results;
-    riskIndicators.value = {
-      maxDrawdown: mockApiResponse.maxDrawdown,
-      sharpeRatio: mockApiResponse.sharpeRatio,
-      volatility: mockApiResponse.volatility
-    };
+  //   backtestResults.value = mockApiResponse.results;
+  //   riskIndicators.value = {
+  //     maxDrawdown: mockApiResponse.maxDrawdown,
+  //     sharpeRatio: mockApiResponse.sharpeRatio,
+  //     volatility: mockApiResponse.volatility
+  //   };
     
+  //   // 更新风险图表
+  //   updateRiskChart();
+  // };
+  import axios from 'axios';
+
+const fetchBacktestResults = async () => {
+  try {
+    // 这里替换为实际的API请求获取回测结果的逻辑
+    const response = await axios.get('http://localhost:5000/api/backtest-results');
+    const data = response.data;
+
+    if (data && data.results) {
+      // 如果API响应包含数据，则更新回测结果和风险指标
+      backtestResults.value = data.results;
+      riskIndicators.value = {
+        maxDrawdown: data.maxDrawdown,
+        sharpeRatio: data.sharpeRatio,
+        volatility: data.volatility
+      };
+    } else {
+      // 如果API响应不包含数据，则使用模拟数据
+      throw new Error('No data received');
+    }
+
     // 更新风险图表
     updateRiskChart();
+  } catch (error) {
+    // 如果发生错误或没有接收到数据，使用模拟数据
+    console.error('获取回测结果失败:', error);
+    backtestResults.value = '更新后的回测结果详细文本...';
+    riskIndicators.value = {
+      maxDrawdown: '4.8%',
+      sharpeRatio: '1.3',
+      volatility: '7.9%'
+    };
+    // 可以选择在这里更新风险图表或跳过
+    updateRiskChart();
+  }
   };
-  
   // 创建风险图表
   const ctx = ref(null);
   const riskChart = ref(null);

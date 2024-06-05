@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="strategy-edit">
     <h1>策略编辑</h1>
@@ -6,15 +8,12 @@
     <div class="select-strategy">
       <label for="strategySelection">选择策略:</label>
       <select id="strategySelection" v-model="selectedStrategy" @change="loadStrategyDetails">
-        <option value="">请选择策略</option>
-        <!-- 正确显示每个策略名称 -->
-        <option v-for="strategy in strategies" :key="strategy.Strategy_Name" :value="strategy.Strategy_Name">
-          {{ selectedStrategy.Strategy_Name }}
-        </option>
+        <option value=""> </option>
+        <option v-for="strategy in strategies" :key="strategy.id" :value="strategy.id">{{ strategy.name }}</option>
       </select>
       <button @click="createNewStrategy">新建策略</button>
+          <!-- 保存按钮 -->
       <button type="button" @click="saveChanges" class="save-button">保存更改</button>
-      
     </div>
     
     <div class="editor-layout">
@@ -26,7 +25,7 @@
 
       </div>
       
-      <!-- 右侧：策略描述（Markdown支持） -->
+         <!-- 右侧：策略描述（Markdown支持） -->
       <div class="description-editor">
         <label for="strategyDescription">策略描述:</label>
         <!-- Textarea 用于输入Markdown -->
@@ -36,17 +35,17 @@
       </div>
 
     </div>
+    
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import axios from 'axios';
+import { ref } from 'vue';
 import ace from 'ace-builds/src-noconflict/ace';
 import 'ace-builds/src-noconflict/mode-python';
+import { VAceEditor } from 'vue3-ace-editor';
 import 'ace-builds/src-noconflict/theme-monokai';
-import MarkdownIt from 'markdown-it';
-import { ElMessage } from 'element-plus';
 
 // 假设这是从API获取的初始策略数据
 const initialStrategy = {
@@ -54,118 +53,83 @@ const initialStrategy = {
   User_ID: 1,
   Strategy_Name: '示例策略',
   Strategy_Description: '这是一个示例策略的描述',
-  Strategy_Code: "// 示例策略代码...\n//buy('code','volume',over='',below='');\n//sell('code','volume',over='',below='');",
+  Strategy_Code: "// 示例策略代码...\n//buy('code','volume',over='',below='');\n//sell('code''volume',over='',below='');",
   Creation_Date: '2023-04-01'
 };
 
 // 使用ref来创建可变的响应式数据对象
 const editedStrategy = ref({ ...initialStrategy });
-const strategies = ref([]); // 用户的策略列表
-const selectedStrategy = ref(null); // 当前选中的策略ID
 
-const markdownText = ref('# hello  \nthis is my strategy  \nwe can edit with markdown');
-const renderedMarkdown = ref('');
+// 将策略代码作为 strategyComponent 的属性
+const strategyComponent = ref(initialStrategy.Strategy_Code);
+
+import { ElMessage } from 'element-plus';
+const saveChanges = async() => {
+  const path = `http://localhost:5000/api/strategies/${editedStrategy.value.Strategy_ID}`;
+  console.log('策略更新:', editedStrategy.value);
+  try {
+    const response = await axios.put(path, editedStrategy.value);
+    console.log(response.data);
+    ElMessage.success('策略更新成功');
+  }
+  catch (error) {
+    console.error('策略更新失败:', error);
+    ElMessage.error('策略更新失败');
+  };
+};
+
+// import { ref } from 'vue';
+import MarkdownIt from 'markdown-it';
 // 创建 markdown-it 实例
 const md = MarkdownIt({
+  // 配置选项
   html: true,
   linkify: true,
 });
-
+// 响应式地存储Markdown文本
+const markdownText = ref('# hello  \nthis is my strategy  \nwe can edit with markdown');
+// 函数，用于更新渲染的Markdown HTML
 function updateDescriptionPreview() {
   renderedMarkdown.value = md.render(markdownText.value);
-
 }
-
+// 响应式地存储渲染后的Markdown HTML
+const renderedMarkdown = ref('');
 // 初始化渲染
 updateDescriptionPreview();
 // 监听Markdown文本的变化，并更新渲染的HTML
 watch(markdownText, updateDescriptionPreview);
 
-onMounted(() => {
-  // 假设这是登录后获取的用户ID
-  const userId = '1';
-  fetchStrategies(userId);
-});
-const fetchStrategies = async (userId) => {
-  try {
-    const response = await axios.get(`http://localhost:5000/api/strategies?userId=${userId}`);
-    const fetchedStrategies = response.data;
-    if (fetchedStrategies.length === 0) {
-      // 如果没有策略，调用 createNewStrategy 函数新建一个策略
-      createNewStrategy();
-    } else {
-      // 如果有策略，选择第一个策略
-      selectedStrategy.value = fetchedStrategies[0].id;
-      loadStrategyDetails(fetchedStrategies[0]);
-    }
-    if (strategies.value.length > 0 && !selectedStrategy.value) {
-      selectedStrategy.value = strategies.value[0].id;
-    }
-  } catch (error) {
-    console.error('策略列表获取失败:', error);
-  }
-};
-
-const loadStrategyDetails = (strategy) => {
-  editedStrategy.value = { ...strategy };
-  updateDescriptionPreview(); // 更新Markdown预览
-};
-
-const createNewStrategy = () => {
-  editedStrategy.value = {
-    Strategy_ID: 1,
-    User_ID: 1,
-    Strategy_Name: '新策略',
-    Strategy_Description: '# 这是一个新策略的描述  ',
-    Strategy_Code: "// 新策略代码...\n",
-    Creation_Date: new Date().toISOString().split('T')[0]
-  };
-  selectedStrategy.value = editedStrategy.value;
-  markdownText.value = editedStrategy.value.Strategy_Description;
-
-};
-
-const saveChanges = async () => {
-  // 使用 prompt 函数弹出窗口让用户输入策略名称
-  const strategyName = prompt('请输入策略名称：', '新策略名称');
-  
-  // 检查用户是否点击了“取消”或未输入任何内容
-  if (strategyName) {
-    // 更新当前策略的名称
-    editedStrategy.value.Strategy_Name = strategyName;
-    
-    // 继续保存策略的逻辑...
-    try {
-      const path = `http://localhost:5000/api/strategies/${editedStrategy.value.Strategy_ID}`;
-      const response = await axios.put(path, editedStrategy.value);
-      console.log(response.data);
-      ElMessage.success('策略更新成功');
-    } catch (error) {
-      console.error('策略更新失败:', error);
-      ElMessage.error('策略更新失败');
-    }
-  } else {
-    // 用户点击了“取消”或未输入任何内容
-    ElMessage.warning('保存已取消');
-  }
-};
-
-
-// 阻止tab键切换焦点的代码保持不变
-onMounted(() => {
+import { onMounted } from 'vue';
+onMounted(() => {//阻止tab键切换焦点
   document.addEventListener('keydown', (event) => {
+    // 检查按下的键是否是Tab键
     if (event.key === 'Tab') {
+      // 阻止默认行为，即不切换焦点
       event.preventDefault();
+      // 获取当前焦点的元素
       const focusedElement = document.activeElement;
-      if (['textarea', 'input'].includes(focusedElement.tagName.toLowerCase()) && focusedElement.getAttribute('type') !== 'button') {
+      // 如果焦点的元素是可输入的（如input或textarea）
+      if (focusedElement.tagName.toLowerCase() === 'textarea' || (focusedElement.tagName.toLowerCase() === 'input' && focusedElement.getAttribute('type') !== 'button')) {
+        // 将制表符字符插入到元素中
         const startPosition = focusedElement.selectionStart;
         const text = focusedElement.value;
         focusedElement.value = text.slice(0, startPosition) + '\t' + text.slice(focusedElement.selectionEnd);
+        // 移动光标到制表符字符后面
         focusedElement.selectionStart = focusedElement.selectionEnd = startPosition + 1;
       }
     }
   });
 });
+const createNewStrategy = () => {
+  editedStrategy.value = {
+    Strategy_ID: 1,
+    User_ID: 1,
+    Strategy_Name: '示例策略',
+    Strategy_Description: '这是一个示例策略的描述',
+    Strategy_Code: "// 示例策略代码...\n//buy('code','volume',over='',below='');\n//sell('code''volume',over='',below='');",
+    Creation_Date: '2023-04-01'
+  };
+};
 </script>
 
 <style scoped>
