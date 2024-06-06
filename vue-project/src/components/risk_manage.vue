@@ -1,7 +1,7 @@
 <template>
     <div class="risk-manage">
       <h1>风险管理</h1>
-      
+      <el-button type="button" @click="fetchBacktestResults" class="refresh-button">刷新结果</el-button>
       <!-- 回测结果展示 -->
       <div class="backtest-results">
         <label for="backtestResults">回测结果:</label>
@@ -23,8 +23,7 @@
         <canvas id="riskChart"></canvas>
       </div>
   
-      <!-- 刷新按钮 -->
-      <button type="button" @click="fetchBacktestResults" class="refresh-button">刷新结果</button>
+
     </div>
   </template>
   
@@ -48,28 +47,15 @@
     volatility: initialBacktestResults.volatility
   });
   
-  // const fetchBacktestResults = async() => {
-  //   // 这里应该是API请求获取回测结果的逻辑
-  //   // 模拟API响应
-  //   const mockApiResponse = {
-  //     maxDrawdown: '4.8%',
-  //     sharpeRatio: '1.3',
-  //     volatility: '7.9%',
-  //     results: '更新后的回测结果详细文本...'
-  //   };
-    
-  //   backtestResults.value = mockApiResponse.results;
-  //   riskIndicators.value = {
-  //     maxDrawdown: mockApiResponse.maxDrawdown,
-  //     sharpeRatio: mockApiResponse.sharpeRatio,
-  //     volatility: mockApiResponse.volatility
-  //   };
-    
-  //   // 更新风险图表
-  //   updateRiskChart();
-  // };
   import axios from 'axios';
-
+const data={
+  maxDrawdown: '4.8%',
+  sharpeRatio: '1.3',
+  volatility: '7.9%',
+  results: '更新后的回测结果详细文本...',
+  labels: ['1月', '2月', '3月', '4月', '5月'],
+  price: [10, 20, 15, 25, 30]
+}
 const fetchBacktestResults = async () => {
   try {
     // 这里替换为实际的API请求获取回测结果的逻辑
@@ -114,10 +100,10 @@ const fetchBacktestResults = async () => {
       type: 'line', // 这里可以根据需要更改图表类型
       data: {
         // 这里是图表的数据，可以根据实际数据进行填充
-        labels: ['1月', '2月', '3月', '4月', '5月'],
+        labels:data.labels,
         datasets: [{
           label: '风险指标',
-          data: [10, 20, 15, 25, 30],
+          data: data.price,
           fill: false,
           borderColor: 'rgb(75, 192, 192)',
           tension: 0.1
@@ -138,7 +124,8 @@ const fetchBacktestResults = async () => {
     if (riskChart.value) {
       // 这里可以根据实际的风险指标数据更新图表
       // 示例：更新数据集的数据
-      riskChart.value.data.datasets[0].data = [10, 20, 15, 25, 30]; // 假设数据
+      riskChart.value.data.datasets[0].data = data.price;
+      
     }
   }
   </script>
@@ -165,4 +152,81 @@ const fetchBacktestResults = async () => {
   .refresh-button {
     margin-top: 20px;
   }
+
+  body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .header, .content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .header button:hover {
+            background-color: #0056b3;
+        }
+        .content {
+            display: flex;
+            gap: 20px;
+        }
+        .code-editor, .markdown-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .code-editor textarea, .markdown-editor textarea {
+            width: 100%;
+            height: 200px;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+        .markdown-preview {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .risk-chart {
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;  /* 设置最大宽度 */
+            max-height: 400px; /* 设置最大高度 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .risk-chart canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
   </style>

@@ -1,20 +1,11 @@
 <template>
   <div class="strategy-edit">
-    <h1>策略编辑</h1>
+    <!-- <h1>策略编辑</h1> -->
     
     <!-- 策略名称下拉框 -->
     <div class="select-strategy">
-      <label for="strategySelection">选择策略:</label>
-      <select id="strategySelection" v-model="selectedStrategy" @change="loadStrategyDetails">
-        <option value="">请选择策略</option>
-        <!-- 正确显示每个策略名称 -->
-        <option v-for="strategy in strategies" :key="strategy.Strategy_Name" :value="strategy.Strategy_Name">
-          {{ selectedStrategy.Strategy_Name }}
-        </option>
-      </select>
-      <button @click="createNewStrategy">新建策略</button>
-      <button type="button" @click="saveChanges" class="save-button">保存更改</button>
-      
+      <el-button type="primary">新建策略</el-button>
+      <el-button type="primary" @click="saveChanges" class="save-button">保存更改</el-button>
     </div>
     
     <div class="editor-layout">
@@ -54,7 +45,7 @@ const initialStrategy = {
   User_ID: 1,
   Strategy_Name: '示例策略',
   Strategy_Description: '这是一个示例策略的描述',
-  Strategy_Code: "// 示例策略代码...\n//buy('code','volume',over='',below='');\n//sell('code','volume',over='',below='');",
+  Strategy_Code: "// 示例策略代码...\n//startegy('code=str',stop_loss_level='float',take_profit_level='float')",
   Creation_Date: '2023-04-01'
 };
 
@@ -88,7 +79,7 @@ onMounted(() => {
 });
 const fetchStrategies = async (userId) => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/strategies?userId=${userId}`);
+    const response = await axios.post(`http://localhost:5000/strategies`,userId);
     const fetchedStrategies = response.data;
     if (fetchedStrategies.length === 0) {
       // 如果没有策略，调用 createNewStrategy 函数新建一个策略
@@ -117,7 +108,7 @@ const createNewStrategy = () => {
     User_ID: 1,
     Strategy_Name: '新策略',
     Strategy_Description: '# 这是一个新策略的描述  ',
-    Strategy_Code: "// 新策略代码...\n",
+    Strategy_Code: "// 示例策略代码...\n//startegy('code',stop_loss_level='',take_profit_level='')",
     Creation_Date: new Date().toISOString().split('T')[0]
   };
   selectedStrategy.value = editedStrategy.value;
@@ -136,7 +127,7 @@ const saveChanges = async () => {
     
     // 继续保存策略的逻辑...
     try {
-      const path = `http://localhost:5000/api/strategies/${editedStrategy.value.Strategy_ID}`;
+      const path = `http://localhost:5000/strategies/`;
       const response = await axios.put(path, editedStrategy.value);
       console.log(response.data);
       ElMessage.success('策略更新成功');
@@ -166,6 +157,15 @@ onMounted(() => {
     }
   });
 });
+import {
+  Check,
+  Delete,
+  Edit,
+  Message,
+  Search,
+  Star,
+} from '@element-plus/icons-vue'
+
 </script>
 
 <style scoped>
@@ -173,9 +173,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
 }
-.select-strategy {
+/* .select-strategy {
   margin-bottom: 20px;
-}
+} */
 .editor-layout {
   display: flex;
   justify-content: space-between;
@@ -202,9 +202,9 @@ onMounted(() => {
   overflow-y: auto; 
   resize: none;
 }
-.save-button {
+/* .save-button {
   margin-top: 20px;
-}
+} */
 
 .code-editor textarea{
   font-family: 'Courier New', Courier, monospace; /* 使用等宽字体 */
@@ -225,4 +225,7 @@ onMounted(() => {
   border-color: #66afe9; /* 聚焦时改变边框颜色 */
   box-shadow: 0 0 8px rgba(102, 175, 233, 0.6); /* 添加阴影 */
 }
+
+
+
 </style>
