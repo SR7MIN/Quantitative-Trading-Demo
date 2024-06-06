@@ -35,6 +35,7 @@ import numpy as np
 def produce_signal(stock_code):
     # 获取股票数据
     stock_zh_a_daily_df = ak.stock_zh_a_daily(symbol="sh"+str(stock_code), adjust="qfq")
+    print(stock_zh_a_daily_df)
 
     # 计算移动平均线
     stock_zh_a_daily_df['MA10'] = stock_zh_a_daily_df['close'].rolling(window=10).mean()
