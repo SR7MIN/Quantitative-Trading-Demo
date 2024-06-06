@@ -509,28 +509,57 @@ def prework():#搜索数据库中yesterdayTotal这一列是否包含了昨天收
                     mysql.connection.commit()
         cur.close()
 
-@app.route('/home/test', methods=['GET', 'POST'])
-def test():
-    account='1257047642'
-    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
-    if result > 0:
-        cur.execute("SELECT stocks_held FROM users WHERE username = %s", (account,))
-        result2 = cur.fetchone()
-        stocks_held=result2['stocks_held']
-        if stocks_held is None:
-            return jsonify({'status': 'success', 'stocks': {}})
-        else:# 返回股票代码 股票名称 持有数目 单股价格 涨跌幅
-            stocks_held=json.loads(stocks_held)
-            stocks_info={}
-            for stock_code in stocks_held:
-                info=get_stock_all_info(stock_code)
-                price=info['最新价'].values[0]
-                change=info['涨跌幅'].values[0]
-                name=info['名称'].values[0]
-                stocks_info[stock_code]=[stock_code, name, stocks_held[stock_code], price, change]
-            return jsonify({'status': 'success', 'stocks_info': stocks_info})
+import numpy as np
+@app.route('/home/strategies', methods=['GET', 'POST']) # 策略
+def strategy():
+    if request.method == 'POST':
+        userDetails = request.get_json()
+        account=userDetails['account']
+        strategy_code=userDetails['Strategy_Code']
+        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        if result > 0:
+            stop_loss_level_data=strategy_code.split(',')[1]
+            stop_profit_level_data=strategy_code.split(',')[2]
+            stop_profit_level_data=strategy_code.split(')')[0]
+            stock_code=strategy_code.split(',')[0]
+            stock_code=strategy_code.split('(')[1]
+            result=produce_signal(stock_code, stop_loss_level_data, stop_profit_level_data)
+            
+            
+            
+def produce_signal(stock_code, stop_loss_level_data, take_profit_level_data):
+    # 获取股票数据
+    stock_zh_a_daily_df = ak.stock_zh_a_daily(symbol="sh"+str(stock_code), adjust="qfq")
 
+    # 计算移动平均线
+    stock_zh_a_daily_df['MA10'] = stock_zh_a_daily_df['close'].rolling(window=10).mean()
+
+    # 创建一个空的DataFrame来存储交易信号
+    signals = pd.DataFrame(index=stock_zh_a_daily_df.index)
+    signals['signal'] = 0.0
+
+    # 当股票价格上穿移动平均线时，生成买入信号
+    signals['signal'][10:] = np.where(stock_zh_a_daily_df['close'][10:] > stock_zh_a_daily_df['MA10'][10:], 1.0, -1.0)   
+
+    # 生成交易订单
+    signals['positions'] = signals['signal'].diff()
+
+    # 计算交易数量
+    signals['trade_volume'] = np.where(signals['positions'] != 0, 100, 0)
+
+    # 添加止损和止盈条件
+    stop_loss_level = stop_loss_level_data
+    take_profit_level = take_profit_level_data
+    stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['close'].pct_change()
+    signals['stop_loss'] = np.where(stock_zh_a_daily_df['daily_return'] < stop_loss_level, -1.0, 0.0)
+    signals['take_profit'] = np.where(stock_zh_a_daily_df['daily_return'] > take_profit_level, 1.0, 0.0)
+
+    # 如果触发止损或止盈条件，立即清仓
+    signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
+    signals['trade_volume'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['trade_volume'])
+
+    return signals
 
 if __name__ == '__main__':
     prework()
