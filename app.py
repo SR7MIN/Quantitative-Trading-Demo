@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Flask, request, session, jsonify, Response, redirect, url_for, send_file
 from flask_mysqldb import MySQL,MySQLdb
 from markupsafe import Markup
-from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name, get_beijing_time, get_stock_all_info, get_yesterday_price
+from handle_stock_data import get_stock_data, save_plot, get_stock_current_price, get_stock_name, get_beijing_time, get_stock_all_info, get_yesterday_price, produce_signal
 import json
 from datetime import datetime
 from flask_cors import CORS
@@ -530,38 +530,27 @@ def strategy():
             return jsonify({'status': 'failed', 'message': 'Strategy failed'})
     return jsonify({'status': 'waiting for strategy'})
           
-def produce_signal(stock_code, stop_loss_level_data, take_profit_level_data):
-    # 获取股票数据
-    stock_zh_a_daily_df = ak.stock_zh_a_daily(symbol="sh"+str(stock_code), adjust="qfq")
+@app.route('/home/test', methods=['GET', 'POST'])
+def test():
+    account='000000'
+    strategy_code='strategy(688031,-0.05,0.10)'
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+    if result > 0:
+        stop_loss_level_data=strategy_code.split(',')[1]
+        stop_profit_level_data=strategy_code.split(',')[2]
+        stop_profit_level_data=strategy_code.split(')')[0]
+        stock_code=strategy_code.split(',')[0]
+        stock_code=strategy_code.split('(')[1]
+        print('1111111111111111111111111')
+        print(stock_code)
+        print(stop_loss_level_data)
+        print(stop_profit_level_data)
+        result=produce_signal(stock_code, stop_loss_level_data, stop_profit_level_data)
+        return jsonify({'status': 'success', 'data': result.to_dict(orient='records')})
+    else:
+        return jsonify({'status': 'failed', 'message': 'Strategy failed'})
 
-    # 计算移动平均线
-    stock_zh_a_daily_df['MA10'] = stock_zh_a_daily_df['close'].rolling(window=10).mean()
-
-    # 创建一个空的DataFrame来存储交易信号
-    signals = pd.DataFrame(index=stock_zh_a_daily_df.index)
-    signals['signal'] = 0.0
-
-    # 当股票价格上穿移动平均线时，生成买入信号
-    signals['signal'][10:] = np.where(stock_zh_a_daily_df['close'][10:] > stock_zh_a_daily_df['MA10'][10:], 1.0, -1.0)   
-
-    # 生成交易订单
-    signals['positions'] = signals['signal'].diff()
-
-    # 计算交易数量
-    signals['trade_volume'] = np.where(signals['positions'] != 0, 100, 0)
-
-    # 添加止损和止盈条件
-    stop_loss_level = stop_loss_level_data
-    take_profit_level = take_profit_level_data
-    stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['close'].pct_change()
-    signals['stop_loss'] = np.where(stock_zh_a_daily_df['daily_return'] < stop_loss_level, -1.0, 0.0)
-    signals['take_profit'] = np.where(stock_zh_a_daily_df['daily_return'] > take_profit_level, 1.0, 0.0)
-
-    # 如果触发止损或止盈条件，立即清仓
-    signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
-    signals['trade_volume'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['trade_volume'])
-
-    return signals
 
 if __name__ == '__main__':
     prework()

@@ -8,6 +8,7 @@ import time
 import pytz
 import json
 import pandas as pd
+import numpy as np
 
 def save_plot(stock_data, stock_code):
     try:
@@ -126,3 +127,33 @@ def get_yesterday_price(stock_code):
     except Exception as e:
         return f"获取数据失败: {str(e)}"
     
+# 返回一只股票从上市到现在每一天的收盘价
+def get_stock_all_price(stock_code,place='cn'):
+    stock_code=str(stock_code)
+    if len(stock_code) == 5:
+        place = 'hk'
+    try:
+        if place == 'cn':
+            stock_data = ak.stock_zh_a_hist(symbol=stock_code, period="daily", adjust="qfq")
+        elif place == 'hk':
+            stock_data = ak.stock_hk_hist(symbol=stock_code, period="daily", adjust="qfq")
+        return stock_data
+    except Exception as e:
+        return f"获取数据失败: {str(e)}"
+    
+def produce_signal(stock_code, stop_loss_level_data, take_profit_level_data):
+    stock_zh_a_daily_df = get_stock_all_price(stock_code)
+    stock_zh_a_daily_df['MA10'] = stock_zh_a_daily_df['收盘'].rolling(window=10).mean()
+    signals = pd.DataFrame(index=stock_zh_a_daily_df.index)
+    signals['signal'] = 0.0
+    signals['signal'][10:] = np.where(stock_zh_a_daily_df['收盘'][10:] > stock_zh_a_daily_df['MA10'][10:], 1.0, -1.0)   
+    signals['positions'] = signals['signal'].diff()
+    signals['trade_volume'] = np.where(signals['positions'] != 0, 100, 0)
+    stop_loss_level = stop_loss_level_data
+    take_profit_level = take_profit_level_data
+    stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['收盘'].pct_change()
+    signals['stop_loss'] = np.where(stock_zh_a_daily_df['daily_return'] < stop_loss_level, -1.0, 0.0)
+    signals['take_profit'] = np.where(stock_zh_a_daily_df['daily_return'] > take_profit_level, 1.0, 0.0)
+    signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
+    signals['trade_volume'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['trade_volume'])
+    return signals
