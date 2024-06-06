@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import io
 import base64
 import akshare as ak
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
@@ -519,12 +520,8 @@ def strategy():
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
         if result > 0:
-            stop_loss_level_data=strategy_code.split(',')[1]
-            stop_profit_level_data=strategy_code.split(',')[2]
-            stop_profit_level_data=strategy_code.split(')')[0]
-            stock_code=strategy_code.split(',')[0]
-            stock_code=strategy_code.split('(')[1]
-            result=produce_signal(stock_code, stop_loss_level_data, stop_profit_level_data)
+            numbers = re.findall(r'-?\d+\.?\d*', strategy_code)
+            result=produce_signal(numbers[0], numbers[1], numbers[2])
             return jsonify({'status': 'success', 'data': result.to_dict(orient='records')})
         else:
             return jsonify({'status': 'failed', 'message': 'Strategy failed'})
@@ -537,16 +534,8 @@ def test():
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
     if result > 0:
-        stop_loss_level_data=strategy_code.split(',')[1]
-        stop_profit_level_data=strategy_code.split(',')[2]
-        stop_profit_level_data=strategy_code.split(')')[0]
-        stock_code=strategy_code.split(',')[0]
-        stock_code=strategy_code.split('(')[1]
-        print('1111111111111111111111111')
-        print(stock_code)
-        print(stop_loss_level_data)
-        print(stop_profit_level_data)
-        result=produce_signal(stock_code, stop_loss_level_data, stop_profit_level_data)
+        numbers = re.findall(r'-?\d+\.?\d*', strategy_code)
+        result=produce_signal(numbers[0], numbers[1], numbers[2])
         return jsonify({'status': 'success', 'data': result.to_dict(orient='records')})
     else:
         return jsonify({'status': 'failed', 'message': 'Strategy failed'})

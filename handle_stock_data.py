@@ -152,8 +152,8 @@ def produce_signal(stock_code, stop_loss_level_data, take_profit_level_data):
     stop_loss_level = stop_loss_level_data
     take_profit_level = take_profit_level_data
     stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['收盘'].pct_change()
-    signals['stop_loss'] = np.where(stock_zh_a_daily_df['daily_return'] < stop_loss_level, -1.0, 0.0)
-    signals['take_profit'] = np.where(stock_zh_a_daily_df['daily_return'] > take_profit_level, 1.0, 0.0)
+    signals['stop_loss'] = np.where(stock_zh_a_daily_df['daily_return'] < float(stop_loss_level), -1.0, 0.0)
+    signals['take_profit'] = np.where(stock_zh_a_daily_df['daily_return'] > float(take_profit_level), 1.0, 0.0)
     signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
     signals['trade_volume'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['trade_volume'])
     return signals
