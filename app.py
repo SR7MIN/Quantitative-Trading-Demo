@@ -525,9 +525,11 @@ def strategy():
             stock_code=strategy_code.split(',')[0]
             stock_code=strategy_code.split('(')[1]
             result=produce_signal(stock_code, stop_loss_level_data, stop_profit_level_data)
-            
-            
-            
+            return jsonify({'status': 'success', 'data': result.to_dict(orient='records')})
+        else:
+            return jsonify({'status': 'failed', 'message': 'Strategy failed'})
+    return jsonify({'status': 'waiting for strategy'})
+          
 def produce_signal(stock_code, stop_loss_level_data, take_profit_level_data):
     # 获取股票数据
     stock_zh_a_daily_df = ak.stock_zh_a_daily(symbol="sh"+str(stock_code), adjust="qfq")
