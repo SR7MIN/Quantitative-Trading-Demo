@@ -515,10 +515,11 @@ import numpy as np
 def strategy():
     if request.method == 'POST':
         userDetails = request.get_json()
-        account=userDetails['account']
+        print('save strategy:', userDetails)
+        # account=userDetails['account']
         strategy_code=userDetails['Strategy_Code']
         cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
+        # result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
         if result > 0:
             numbers = re.findall(r'-?\d+\.?\d*', strategy_code)
             result=produce_signal(numbers[0], numbers[1], numbers[2])

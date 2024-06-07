@@ -4,7 +4,7 @@
     
     <!-- 策略名称下拉框 -->
     <div class="select-strategy">
-      <el-button type="primary">新建策略</el-button>
+      <el-button type="primary" @click="createNewStrategy">新建策略</el-button>
       <el-button type="primary" @click="saveChanges" class="save-button">保存更改</el-button>
     </div>
     
@@ -72,11 +72,11 @@ updateDescriptionPreview();
 // 监听Markdown文本的变化，并更新渲染的HTML
 watch(markdownText, updateDescriptionPreview);
 
-onMounted(() => {
-  // 假设这是登录后获取的用户ID
-  const userId = '1';
-  fetchStrategies(userId);
-});
+// onMounted(() => {
+//   // 假设这是登录后获取的用户ID
+//   const userId = '1';
+//   fetchStrategies(userId);
+// });
 const fetchStrategies = async (userId) => {
   try {
     const response = await axios.post(`http://localhost:5000/strategies`,userId);
@@ -124,11 +124,11 @@ const saveChanges = async () => {
   if (strategyName) {
     // 更新当前策略的名称
     editedStrategy.value.Strategy_Name = strategyName;
-    
+    console.log(editedStrategy.value);
     // 继续保存策略的逻辑...
     try {
-      const path = `http://localhost:5000/strategies/`;
-      const response = await axios.put(path, editedStrategy.value);
+      const path = `http://localhost:5000/home/strategies`;
+      const response = await axios.post(path, editedStrategy.value);
       console.log(response.data);
       ElMessage.success('策略更新成功');
     } catch (error) {
