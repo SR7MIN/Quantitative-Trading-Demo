@@ -515,6 +515,7 @@ import numpy as np
 def strategy():
     if request.method == 'POST':
         userDetails = request.get_json()
+        # print(userDetails)
         strategy_code=userDetails['Strategy_Code']
         numbers = re.findall(r'-?\d+\.?\d*', strategy_code)
         result=produce_signal(numbers[0], numbers[1], numbers[2])

@@ -46,7 +46,8 @@ const initialStrategy = {
   Strategy_Name: '示例策略',
   Strategy_Description: '这是一个示例策略的描述',
   Strategy_Code: "// 示例策略代码...\n//startegy('code=str',stop_loss_level='float',take_profit_level='float')",
-  Creation_Date: '2023-04-01'
+  Creation_Date: '2023-04-01',
+  result:ref({})
 };
 
 // 使用ref来创建可变的响应式数据对象
@@ -108,18 +109,20 @@ const createNewStrategy = () => {
     User_ID: 1,
     Strategy_Name: '新策略',
     Strategy_Description: '# 这是一个新策略的描述  ',
-    Strategy_Code: "// 示例策略代码...\n//startegy('code',stop_loss_level='',take_profit_level='')",
+    Strategy_Code: "strategy(688031,-0.05,0.10)",
     Creation_Date: new Date().toISOString().split('T')[0]
   };
   selectedStrategy.value = editedStrategy.value;
   markdownText.value = editedStrategy.value.Strategy_Description;
 
 };
+const trade = ref({});
+import { getCurrentInstance } from "vue";
+const systemId = getCurrentInstance()?.appContext.config.globalProperties.$systemId
 
 const saveChanges = async () => {
   // 使用 prompt 函数弹出窗口让用户输入策略名称
   const strategyName = prompt('请输入策略名称：', '新策略名称');
-  
   // 检查用户是否点击了“取消”或未输入任何内容
   if (strategyName) {
     // 更新当前策略的名称
@@ -129,7 +132,10 @@ const saveChanges = async () => {
     try {
       const path = `http://localhost:5000/home/strategies`;
       const response = await axios.post(path, editedStrategy.value);
-      console.log(response.data);
+      // console.log(response.data);
+      // trade=response.data;
+      systemId.value=response.data;
+      console.log(systemId.value);
       ElMessage.success('策略更新成功');
     } catch (error) {
       console.error('策略更新失败:', error);

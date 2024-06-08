@@ -30,13 +30,14 @@
   <script setup>
   import { ref } from 'vue';
   import Chart from 'chart.js/auto';
-  
+  import { getCurrentInstance } from "vue";
+  const systemId = getCurrentInstance()?.appContext.config.globalProperties.$systemId
   // 假设这是从API获取的回测结果数据
   const initialBacktestResults = {
     maxDrawdown: '5.0%',
     sharpeRatio: '1.2',
     volatility: '8.5%',
-    results: '这里是回测结果的详细文本...'
+    results: systemId.value,
   };
   
   // 使用ref来创建可变的响应式数据对象
@@ -56,12 +57,17 @@ const data={
   labels: ['1月', '2月', '3月', '4月', '5月'],
   price: [10, 20, 15, 25, 30]
 }
+
+
+
+
 const fetchBacktestResults = async () => {
+  console.log(systemId)
   try {
     // 这里替换为实际的API请求获取回测结果的逻辑
     const response = await axios.get('http://localhost:5000/api/backtest-results');
     const data = response.data;
-
+    
     if (data && data.results) {
       // 如果API响应包含数据，则更新回测结果和风险指标
       backtestResults.value = data.results;
