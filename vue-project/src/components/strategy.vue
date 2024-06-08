@@ -45,7 +45,7 @@ const initialStrategy = {
   User_ID: 1,
   Strategy_Name: '示例策略',
   Strategy_Description: '这是一个示例策略的描述',
-  Strategy_Code: "// 示例策略代码...\n//startegy('code=str',stop_loss_level='float',take_profit_level='float')",
+  Strategy_Code: "// 示例策略代码...\nstrategy(688031,-0.05,0.10)",
   Creation_Date: '2023-04-01',
   result:ref({})
 };
@@ -55,7 +55,7 @@ const editedStrategy = ref({ ...initialStrategy });
 const strategies = ref([]); // 用户的策略列表
 const selectedStrategy = ref(null); // 当前选中的策略ID
 
-const markdownText = ref('# hello  \nthis is my strategy  \nwe can edit with markdown');
+const markdownText = ref("# hello  \nthis is my strategy  \nwe can edit with markdown  \nstartegy('code=str',stop_loss_level='float',take_profit_level='float')");
 const renderedMarkdown = ref('');
 // 创建 markdown-it 实例
 const md = MarkdownIt({
@@ -108,8 +108,8 @@ const createNewStrategy = () => {
     Strategy_ID: 1,
     User_ID: 1,
     Strategy_Name: '新策略',
-    Strategy_Description: '# 这是一个新策略的描述  ',
-    Strategy_Code: "strategy(688031,-0.05,0.10)",
+    Strategy_Description: '# 这是一个新策略的描述  \n示例策略代码:\nstrategy(688031,-0.05,0.10)',
+    Strategy_Code: "",
     Creation_Date: new Date().toISOString().split('T')[0]
   };
   selectedStrategy.value = editedStrategy.value;
