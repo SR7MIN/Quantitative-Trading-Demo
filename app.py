@@ -518,6 +518,10 @@ def strategy():
         strategy_code=userDetails['Strategy_Code']
         numbers = re.findall(r'-?\d+\.?\d*', strategy_code)
         result=produce_signal(numbers[0], numbers[1], numbers[2])
+        total_profit=0.0
+        if result is not None:
+            for i in len(result):
+                total_profit+=result.loc[i, 'daily_strategy_profit']
         return jsonify({'status': 'success', 'data': result.to_dict(orient='records')})
     return jsonify({'status': 'waiting for strategy'})
           
