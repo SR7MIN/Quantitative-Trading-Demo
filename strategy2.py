@@ -30,6 +30,7 @@
 
 import akshare as ak
 import pandas as pd
+pd.set_option('display.max_rows', 10000)
 import numpy as np
 
 def produce_signal(stock_code):
@@ -43,12 +44,14 @@ def produce_signal(stock_code):
     # 创建一个空的DataFrame来存储交易信号
     signals = pd.DataFrame(index=stock_zh_a_daily_df.index)
     signals['signal'] = 0.0
+    signals.loc[0,'signal']=1.0
+    signals['daily_strategy_return'] = 0.0
 
     # 当股票价格上穿移动平均线时，生成买入信号
     signals['signal'][10:] = np.where(stock_zh_a_daily_df['close'][10:] > stock_zh_a_daily_df['MA10'][10:], 1.0, -1.0)   
 
     # 生成交易订单
-    signals['positions'] = signals['signal'].diff()
+    signals['positions'] = np.where(signals['signal'].cumsum()>0,1,0)
 
     # 计算交易数量
     signals['trade_volume'] = np.where(signals['positions'] != 0, 100, 0)
@@ -56,14 +59,21 @@ def produce_signal(stock_code):
     # 添加止损和止盈条件
     stop_loss_level = -0.05
     take_profit_level = 0.10
-    stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['close'].pct_change()
+    signals.loc[0,'positions']=1
+    stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['close'].diff()
+    print(stock_zh_a_daily_df['daily_return'])
+    signals['holding'] = np.where((signals['signal'].cumsum()>=0),signals['signal'].cumsum(),0)*100
+
+    signals.loc[0,'daily_strategy_return']=0.0
+    signals['daily_strategy_return'] = signals['holding'] * stock_zh_a_daily_df['daily_return']
     signals['stop_loss'] = np.where(stock_zh_a_daily_df['daily_return'] < stop_loss_level, -1.0, 0.0)
     signals['take_profit'] = np.where(stock_zh_a_daily_df['daily_return'] > take_profit_level, 1.0, 0.0)
 
     # 如果触发止损或止盈条件，立即清仓
-    signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
+    #signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
     signals['trade_volume'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['trade_volume'])
 
+    #计算策略收益
     return signals
 
 result=produce_signal(688031)
