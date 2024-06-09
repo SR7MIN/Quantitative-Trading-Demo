@@ -5,31 +5,12 @@
       <!-- 回测结果展示 -->
       <div class="backtest-results">
         <label for="backtestResults">回测结果:</label>
-        <textarea id="backtestResults" readonly>{{ backtestResults }}</textarea>
-        <!-- <table>
-          <thead>
-            <tr>
-              <th>Positions</th>
-              <th>Signal</th>
-              <th>Stop Loss</th>
-              <th>Take Profit</th>
-              <th>Trade Volume</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(trade, index) in backtest" :key="index">
-              <td>{{ trade.positions }}</td>
-              <td>{{ trade.signal }}</td>
-              <td>{{ trade.stop_loss }}</td>
-              <td>{{ trade.take_profit }}</td>
-              <td>{{ trade.trade_volume }}</td>
-            </tr>
-          </tbody>
-        </table> -->
+        <!-- <textarea id="backtestResults" readonly>{{ backtestResults }}</textarea> -->
+
         <el-table :data="Object.values(backtest)" style="width: 100%" height="250">
           <!-- <el-table-column prop="positions" label="Positions" width="240"/> -->
           <el-table-column prop="signal" label="Signal" width="240"/>
-          <!-- <el-table-column prop="stop_loss" label="Stop Loss" width="240"/> -->
+          <el-table-column prop="daily_strategy_return" label="daily_strategy_return" width="240"/>
           <!-- <el-table-column prop="take_profit" label="Take Profit" width="240"/> -->
           <el-table-column prop="trade_volume" label="Trade Volume" width="240"/>
         </el-table>
@@ -45,13 +26,13 @@
           <li>最大回撤: {{ riskIndicators.maxDrawdown }}%</li>
           <li>夏普比率: {{ riskIndicators.sharpeRatio }}</li>
           <li>波动率: {{ riskIndicators.volatility }}%</li>
+          <li>收益：{{riskIndicators.profit}}</li>
         </ul>
       </div>
 
-      <!--as id=" 风险图表 -->
-      <!-- <div class="risk-chart">
-        <canvriskChart"></canvas>
-      </div> -->
+      <div class="risk-chart">
+        <canvas id="riskChart"></canvas>
+      </div>
   
 
     </div>
@@ -62,12 +43,19 @@ import { ref } from 'vue';
 import Chart from 'chart.js/auto';
 import { getCurrentInstance } from "vue";
 const systemId = getCurrentInstance()?.appContext.config.globalProperties.$systemId
-// 假设这是从API获取的回测结果数据
+  // 创建风险图表
+  const ctx = ref(null);
+  const riskChart = ref(null);
+  const chartData = ref({ // 确保使用ref创建响应式引用
+  labels: [1, 2, 3, 4, 5],
+  price: [1, 2, 3, 4, 5]
+});
 const initialBacktestResults = {
   maxDrawdown: '5.0%',
   sharpeRatio: '1.2',
   volatility: '8.5%',
   results: systemId.value,
+  profit:0.0
 };
 const tableData = [
   {
@@ -132,19 +120,13 @@ const backtestResults = ref(initialBacktestResults.results);
 const riskIndicators = ref({
   maxDrawdown: initialBacktestResults.maxDrawdown,
   sharpeRatio: initialBacktestResults.sharpeRatio,
-  volatility: initialBacktestResults.volatility
+  volatility: initialBacktestResults.volatility,
+  profit:initialBacktestResults.profit
 });
 
 import axios from 'axios';
 // import { ta } from 'element-plus/es/locale';
-const data={
-  maxDrawdown: '4.8%',
-  sharpeRatio: '1.3',
-  volatility: '7.9%',
-  results: '更新后的回测结果详细文本...',
-  labels: ['1月', '2月', '3月', '4月', '5月'],
-  price: [10, 20, 15, 25, 30]
-};
+
 
 const testdata = ref({
   data: [
@@ -154,8 +136,9 @@ const testdata = ref({
     { positions: 'MSFT', signal: 'Sell', stop_loss: '2%', take_profit: '7%', trade_volume: 120 },
   ]
 });
-const tpstring="{\n  \"data\": [\n    {\n      \"positions\": NaN,\n      \"signal\": 0.0,\n      \"stop_loss\": 0.0,\n      \"take_profit\": 0.0,\n      \"trade_volume\": 100\n    },\n    {\n      \"positions\": 0.0,\n      \"signal\": 0.0,\n      \"stop_loss\": 0.0,\n      \"take_profit\": 0.0,\n      \"trade_volume\": 0\n    }\n ],\n  \"status\": \"success\"\n}\n"
-
+const labels =chartData.value.labels; // 使用data对象的键作为横轴标签
+const values = chartData.value.price; // 使用过滤后的chartData作为数据值
+const backgroundColors = values.map((value) => value >= 0 ? 'red' : 'green'); // 正数用红色，负数用绿色
 const backtest=ref({})
 const fetchBacktestResults = async () => {
   if (!systemId.value) {
@@ -163,16 +146,33 @@ const fetchBacktestResults = async () => {
     backtest=tabelData
     return;
   }
+
+  // console.log(chartData)
+
   const tempjson=fixJsonString(systemId.value)
   testdata.value = ref(tempjson)
+  // chartData.price=tempjson.data.map(item => item.daily_strategy_return);
+  let temp_price=[]
+  temp_price=tempjson.data.map(item => item.daily_strategy_return);
+  // console.log(temp_price)
+  temp_price.splice(200,198000)
+  chartData.value.price=temp_price
+  // console.log(chartData.price)
+  chartData.value.labels=Array(chartData.value.price.length).fill().map((_, index) => index + 1)
   const tempvalue_private=testdata._value
   backtest.value = tempvalue_private.value.data;
+  riskIndicators.value.profit=tempvalue_private.value.total_profit;
+
+
+  // console.log('chart values:',labels,values,backgroundColors)
+  
+  console.log(riskIndicators.profit)
   // if(backtest.value.length>0){
   //   tableData=backtest.value
   //   console.log('tableData')
   // }
   // console.log(testdata.value)
-  console.log(backtest.value)
+  console.log(backtest.value[0])
   console.log(typeof testdata.value)
   updateRiskChart();
   };
@@ -190,46 +190,51 @@ function fixJsonString(jsonString) {
     throw error;
   }
 }
-  
-  // 创建风险图表
-  const ctx = ref(null);
-  const riskChart = ref(null);
-  
-// onMounted(() => {
-//   ctx.value = document.getElementById('riskChart').getContext('2d');
-//   riskChart.value = new Chart(ctx.value, {
-//     type: 'line', // 这里可以根据需要更改图表类型
-//     data: {
-//       // 这里是图表的数据，可以根据实际数据进行填充
-//       labels:data.labels,
-//       datasets: [{
-//         label: '风险指标',
-//         data: data.price,
-//         fill: false,
-//         borderColor: 'rgb(75, 192, 192)',
-//         tension: 0.1
-//       }]
-//     },
-//     options: {
-//       // 图表配置项
-//       scales: {
-//         y: {
-//           beginAtZero: false
-//         }
-//       }
-//     }
-//   });
-// });
-  
+
 function updateRiskChart() {
+  // 获取canvas元素及其上下文
+  const canvas = document.getElementById('riskChart');
+  const ctx = canvas.getContext('2d');
+
+  // 检查风险图表是否已经创建
   if (riskChart.value) {
-    // 这里可以根据实际的风险指标数据更新图表
-    // 示例：更新数据集的数据
-    
-    riskChart.value.data.datasets[0].data = data.price;
-    
+    // 如果已存在图表实例，先销毁它
+    riskChart.value.destroy();
   }
+
+  // 准备图表数据
+  const labels = chartData.value.labels; // 横轴标签
+  const values = chartData.value.price; // 纵轴数据
+  const backgroundColors = values.map(value => value >= 0 ? 'red' : 'green'); // 根据数据值正负设置颜色
+  console.log('chart values:',labels,values,backgroundColors)
+  // 创建新的图表实例
+  riskChart.value = new Chart(ctx, {
+    type: 'bar', // 柱形图
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Daily Strategy Return', // 数据集标签
+        data: values, // 数据集数据
+        backgroundColor: backgroundColors, // 柱形颜色
+        borderColor: 'rgb(75, 192, 192)', // 边框颜色
+        borderWidth: 0 // 边框宽度
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true // y轴从0开始
+        }
+      },
+      plugins: {
+        legend: {
+          display: false // 隐藏图例
+        }
+      }
+    }
+  });
 }
+
 </script>
   
 <style scoped>
