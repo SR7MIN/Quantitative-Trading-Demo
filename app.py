@@ -520,23 +520,22 @@ def strategy():
         result=produce_signal(numbers[0], numbers[1], numbers[2])
         total_profit=0.0
         if result is not None:
-            for i in len(result):
-                total_profit+=result.loc[i, 'daily_strategy_profit']
-        return jsonify({'status': 'success', 'data': result.to_dict(orient='records')})
+            for i in range(1, len(result)):
+                total_profit+=result.loc[i, 'daily_strategy_return']
+        return jsonify({'status': 'success', 'data': result.to_dict(orient='records'), 'total_profit': total_profit})
     return jsonify({'status': 'waiting for strategy'})
           
 @app.route('/home/test', methods=['GET', 'POST'])
 def test():
     account='000000'
     strategy_code='strategy(688031,-0.05,0.10)'
-    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    result = cur.execute("SELECT * FROM users WHERE username = %s", (account,))
-    if result > 0:
-        numbers = re.findall(r'-?\d+\.?\d*', strategy_code)
-        result=produce_signal(numbers[0], numbers[1], numbers[2])
-        return jsonify({'status': 'success', 'data': result.to_dict(orient='records')})
-    else:
-        return jsonify({'status': 'failed', 'message': 'Strategy failed'})
+    numbers = re.findall(r'-?\d+\.?\d*', strategy_code)
+    result=produce_signal(numbers[0], numbers[1], numbers[2])
+    total_profit=0.0
+    if result is not None:
+        for i in range(1, len(result)):
+            total_profit+=result.loc[i, 'daily_strategy_return']
+    return jsonify({'status': 'success', 'data': result.to_dict(orient='records'), 'total_profit': total_profit})
 
 
 if __name__ == '__main__':
