@@ -27,11 +27,11 @@
           </tbody>
         </table> -->
         <el-table :data="Object.values(backtest)" style="width: 100%" height="250">
-          <el-table-column prop="positions" label="Positions" width="120"/>
-          <el-table-column prop="signal" label="Signal" width="120"/>
-          <el-table-column prop="stop_loss" label="Stop Loss" width="120"/>
-          <el-table-column prop="take_profit" label="Take Profit" width="120"/>
-          <el-table-column prop="trade_volume" label="Trade Volume" width="120"/>
+          <el-table-column prop="positions" label="Positions" width="240"/>
+          <el-table-column prop="signal" label="Signal" width="240"/>
+          <el-table-column prop="stop_loss" label="Stop Loss" width="240"/>
+          <el-table-column prop="take_profit" label="Take Profit" width="240"/>
+          <el-table-column prop="trade_volume" label="Trade Volume" width="240"/>
         </el-table>
 
 
