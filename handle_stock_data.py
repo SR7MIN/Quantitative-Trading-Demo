@@ -146,14 +146,19 @@ def produce_signal(stock_code, stop_loss_level_data, take_profit_level_data):
     stock_zh_a_daily_df['MA10'] = stock_zh_a_daily_df['收盘'].rolling(window=10).mean()
     signals = pd.DataFrame(index=stock_zh_a_daily_df.index)
     signals['signal'] = 0.0
+    signals.loc[0,'signal']=1.0
+    signals['daily_strategy_return'] = 0.0
     signals['signal'][10:] = np.where(stock_zh_a_daily_df['收盘'][10:] > stock_zh_a_daily_df['MA10'][10:], 1.0, -1.0)   
-    signals['positions'] = signals['signal'].diff()
+    signals['positions'] =  np.where(signals['signal'].cumsum()>0,1,0)
     signals['trade_volume'] = np.where(signals['positions'] != 0, 100, 0)
     stop_loss_level = stop_loss_level_data
     take_profit_level = take_profit_level_data
-    stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['收盘'].pct_change()
+    stock_zh_a_daily_df['daily_return'] = stock_zh_a_daily_df['收盘'].diff()
+    signals['holding'] = np.where((signals['signal'].cumsum()>=0),signals['signal'].cumsum(),0)*100
+    signals.loc[0,'daily_strategy_return']=0.0
+    signals['daily_strategy_return'] = signals['holding'] * stock_zh_a_daily_df['daily_return']
     signals['stop_loss'] = np.where(stock_zh_a_daily_df['daily_return'] < float(stop_loss_level), -1.0, 0.0)
     signals['take_profit'] = np.where(stock_zh_a_daily_df['daily_return'] > float(take_profit_level), 1.0, 0.0)
-    signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
+    #signals['positions'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['positions'])
     signals['trade_volume'] = np.where((signals['stop_loss'] == -1.0) | (signals['take_profit'] == 1.0), 0, signals['trade_volume'])
     return signals
