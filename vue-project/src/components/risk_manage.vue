@@ -26,7 +26,7 @@
             </tr>
           </tbody>
         </table> -->
-        <el-table :data="backtest" style="width: 100%" height="250">
+        <el-table :data="Object.values(backtest)" style="width: 100%" height="250">
           <el-table-column prop="positions" label="Positions" width="120"/>
           <el-table-column prop="signal" label="Signal" width="120"/>
           <el-table-column prop="stop_loss" label="Stop Loss" width="120"/>
@@ -136,6 +136,7 @@ const riskIndicators = ref({
 });
 
 import axios from 'axios';
+// import { ta } from 'element-plus/es/locale';
 const data={
   maxDrawdown: '4.8%',
   sharpeRatio: '1.3',
@@ -157,10 +158,19 @@ const tpstring="{\n  \"data\": [\n    {\n      \"positions\": NaN,\n      \"sign
 
 const backtest=ref({})
 const fetchBacktestResults = async () => {
+  if (!systemId.value) {
+    console.error('系统ID为空');
+    backtest=tabelData
+    return;
+  }
   const tempjson=fixJsonString(systemId.value)
   testdata.value = ref(tempjson)
   const tempvalue_private=testdata._value
   backtest.value = tempvalue_private.value.data;
+  // if(backtest.value.length>0){
+  //   tableData=backtest.value
+  //   console.log('tableData')
+  // }
   // console.log(testdata.value)
   console.log(backtest.value)
   console.log(typeof testdata.value)
