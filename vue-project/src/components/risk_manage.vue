@@ -8,7 +8,7 @@
         <!-- <textarea id="backtestResults" readonly>{{ backtestResults }}</textarea> -->
 
         <el-table :data="Object.values(backtest)" style="width: 100%" height="250">
-          <!-- <el-table-column prop="positions" label="Positions" width="240"/> -->
+          <el-table-column prop="positions" label="Positions" width="240"/>
           <el-table-column prop="signal" label="Signal" width="240"/>
           <el-table-column prop="daily_strategy_return" label="daily_strategy_return" width="240"/>
           <!-- <el-table-column prop="take_profit" label="Take Profit" width="240"/> -->
@@ -18,21 +18,24 @@
 
         
       </div>
-      
-      <!-- 风险指标 -->
-      <div class="risk-indicators">
+
+<!-- 风险图表和指标容器 -->
+<div class="risk-chart-container">
+    <div class="risk-chart">
+        <canvas id="riskChart"></canvas>
+    </div>
+    <!-- 风险指标 -->
+    <div class="risk-indicators">
         <h2>风险指标</h2>
         <ul>
-          <li>最大回撤: {{ riskIndicators.maxDrawdown }}%</li>
-          <li>夏普比率: {{ riskIndicators.sharpeRatio }}</li>
-          <li>波动率: {{ riskIndicators.volatility }}%</li>
-          <li>收益：{{riskIndicators.profit}}</li>
+            <li>最大回撤: {{ riskIndicators.maxDrawdown }}%</li>
+            <li>夏普比率: {{ riskIndicators.sharpeRatio }}</li>
+            <li>波动率: {{ riskIndicators.volatility }}%</li>
+            <li>收益：{{ riskIndicators.profit }}</li>
         </ul>
-      </div>
+    </div>
+</div>
 
-      <div class="risk-chart">
-        <canvas id="riskChart"></canvas>
-      </div>
   
 
     </div>
@@ -326,8 +329,8 @@ body {
           padding: 20px;
           border-radius: 8px;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-          max-width: 600px;  /* 设置最大宽度 */
-          max-height: 400px; /* 设置最大高度 */
+          max-width: 900px;  /* 设置最大宽度 */
+          max-height: 600px; /* 设置最大高度 */
           display: flex;
           justify-content: center;
           align-items: center;
@@ -336,4 +339,23 @@ body {
           max-width: 100%;
           max-height: 100%;
       }
+      /* 风险图表和指标容器样式 */
+.risk-chart-container {
+  display: flex; /* 使用Flexbox布局 */
+  justify-content: space-between; /* 左右布局，且两边留有空白 */
+  align-items: flex-start; /* 垂直对齐方式 */
+}
+
+.risk-chart {
+  width: 60%; /* 例如，图表占据60%的宽度 */
+}
+
+.risk-indicators {
+  width: 35%; /* 指标占据剩余的35%宽度 */
+  padding-left: 20px; /* 与图表部分保持一定间距 */
+  border-left: 1px solid #ccc; /* 左侧添加分割线 */
+  padding-top: 150px;
+}
+
+/* 其他样式保持不变 */
 </style>
