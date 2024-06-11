@@ -142,7 +142,7 @@
                   >
                     <span>如果你觉得我们的网页还不错，可以请作者喝杯奶茶：</span>
                     <img
-                      src="../assets/付款码.jpg"
+                      src="../assets/付款码.png"
                       alt="Payment QR Code"
                       style="width: 100%"
                     />

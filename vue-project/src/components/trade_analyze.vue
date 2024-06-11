@@ -7,10 +7,20 @@
       <el-table-column prop="num" label="持有数目" />
       <el-table-column prop="price" label="单股价格" />
       <!-- // 涨跌幅 -->
-      <el-table-column prop="percent" label="涨跌幅(%)" />
+      <el-table-column prop="percent" label="涨跌幅(%)">
+        <template v-slot="{ row }">
+        <div :style="row.percent < -2 ? 'color: red; font-size: 20px;' : ''">
+          {{ row.percent }}
+        </div>
+      </template>
+</el-table-column>
       <el-table-column prop="total" label="净利润" />
 
     </el-table>
+    <p v-if="stocksbelow2.length" style="color: red; margin-top: 20px;">
+      注意！以下股票跌幅大于2%，请注意风险：<br />
+      {{ stocksbelow2.join(', ') }}
+    </p>
     <el-row style="margin-top: 30px;">
       <el-col :span="12">
         <div ref="chartRef" style="width: 600px; height: 400px;"></div>
@@ -23,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted} from 'vue'
+import { ref, computed, onMounted,defineProps} from 'vue'
 import { useStorage } from '@vueuse/core'
 import axios from 'axios';
 import * as echarts from 'echarts';
@@ -53,6 +63,9 @@ const all_stock = computed(() => {
     }
   })
 });
+const stocksbelow2 = computed(() => {
+  return all_stock.value.filter(stock => stock.percent < -2).map(stock => stock.name)
+})
 async function get_stock() {
   const path = 'http://localhost:5000/home/held-stock'
   try {
