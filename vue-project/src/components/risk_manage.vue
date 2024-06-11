@@ -156,6 +156,7 @@ const fetchBacktestResults = async () => {
   // console.log(chartData)
 
   const tempjson=fixJsonString(systemId.value)
+  
   testdata.value = ref(tempjson)
   // chartData.price=tempjson.data.map(item => item.daily_strategy_return);
   let temp_price=[]
@@ -244,12 +245,22 @@ function updateRiskChart() {
 async function main() {
     const url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token=24.7da51ba4fd67064f5685a132d494b814.2592000.1720665994.282335-76127139";
     const prompt_template = "您好，我是一位专业的量化策略评估师。请提供您的策略详情，包括股票代码、止损阈值和止盈阈值。例如：“strategy(688031, -0.05, 0.10)”这将帮助我更好地评估您的策略。我只需要评价策略，不应该索要任何额外信息。我会对你的策略进行分析，评价，并告诉你策略的改进思路。接下来，请你评价一下这个策略："
+
+    console.log('global_strategy:',global_strategy.value.Strategy_Code)
     const payload = {
         messages: [
-            {
-                role: "user",
-                content: prompt_template+global_strategy
-            }
+          {
+            "role": "user",
+            "content": "您好，你是一位专业的量化策略评估师。我会提供一个量化交易策略，格式例如：“strategy('股票代码', 止盈条件, 止损条件)”。你只需要直接评价策略，不应该索要任何额外信息，不应该回答额外的内容。你会对策略进行分析，评价，并告诉我策略的改进思路。这是你需要评估的策略："+global_strategy.value.Strategy_Code
+          },
+          // {
+          //   "role": "assistant",
+          //   "content": "您好！我会按照您的指示进行策略分析评估。请您提供策略详情。"
+          // },
+          // {
+          //   "role": "user",
+          //   "content": global_strategy.value
+          // }
         ]
         // system: prompt_template
     };
