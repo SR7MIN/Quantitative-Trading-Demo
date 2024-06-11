@@ -5,7 +5,7 @@
       <!-- 回测结果展示 -->
       <div class="backtest-results">
         <label for="backtestResults">回测结果:</label>
-        <!-- <textarea id="backtestResults" readonly>{{ backtestResults }}</textarea> -->
+        <textarea id="backtestResults" readonly>{{ backtestResults }}</textarea>
 
         <el-table :data="Object.values(backtest)" style="width: 100%" height="250">
           <el-table-column prop="positions" label="Positions" width="240"/>
@@ -42,10 +42,12 @@
   </template>
   
 <script setup>
+import qs from 'qs';
 import { ref } from 'vue';
 import Chart from 'chart.js/auto';
 import { getCurrentInstance } from "vue";
 const systemId = getCurrentInstance()?.appContext.config.globalProperties.$systemId
+const global_strategy=getCurrentInstance()?.appContext.config.globalProperties.$global_strategy
   // 创建风险图表
   const ctx = ref(null);
   const riskChart = ref(null);
@@ -149,6 +151,7 @@ const fetchBacktestResults = async () => {
     backtest=tabelData
     return;
   }
+  main();
 
   // console.log(chartData)
 
@@ -194,6 +197,7 @@ function fixJsonString(jsonString) {
   }
 }
 
+
 function updateRiskChart() {
   // 获取canvas元素及其上下文
   const canvas = document.getElementById('riskChart');
@@ -209,7 +213,7 @@ function updateRiskChart() {
   const labels = chartData.value.labels; // 横轴标签
   const values = chartData.value.price; // 纵轴数据
   const backgroundColors = values.map(value => value >= 0 ? 'red' : 'green'); // 根据数据值正负设置颜色
-  console.log('chart values:',labels,values,backgroundColors)
+  // console.log('chart values:',labels,values,backgroundColors)
   // 创建新的图表实例
   riskChart.value = new Chart(ctx, {
     type: 'bar', // 柱形图
@@ -237,6 +241,41 @@ function updateRiskChart() {
     }
   });
 }
+async function main() {
+    const url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token=24.7da51ba4fd67064f5685a132d494b814.2592000.1720665994.282335-76127139";
+    const prompt_template = "您好，我是一位专业的量化策略评估师。请提供您的策略详情，包括股票代码、止损阈值和止盈阈值。例如：“strategy(688031, -0.05, 0.10)”这将帮助我更好地评估您的策略。我只需要评价策略，不应该索要任何额外信息。我会对你的策略进行分析，评价，并告诉你策略的改进思路。接下来，请你评价一下这个策略："
+    const payload = {
+        messages: [
+            {
+                role: "user",
+                content: prompt_template+global_strategy
+            }
+        ]
+        // system: prompt_template
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const responseData = await response.json();
+        console.log(responseData.result);
+        backtestResults.value = responseData.result;
+        // console.log('hihihi')
+        // console.log(backtestResults.value)
+
+        return responseData.result;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+
 
 </script>
   

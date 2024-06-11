@@ -17,4 +17,5 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 app.use(router)
 app.config.globalProperties.$systemId = ref({});
+app.config.globalProperties.$global_strategy= ref({});
 app.mount('#app')

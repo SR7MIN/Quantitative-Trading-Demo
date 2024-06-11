@@ -119,9 +119,10 @@ const createNewStrategy = () => {
 const trade = ref({});
 import { getCurrentInstance } from "vue";
 const systemId = getCurrentInstance()?.appContext.config.globalProperties.$systemId
-
+const global_strategy=getCurrentInstance()?.appContext.config.globalProperties.$global_strategy
 const saveChanges = async () => {
   // 使用 prompt 函数弹出窗口让用户输入策略名称
+  global_strategy.value=editedStrategy.value;
   const strategyName = prompt('请输入策略名称：', '新策略名称');
   // 检查用户是否点击了“取消”或未输入任何内容
   if (strategyName) {
